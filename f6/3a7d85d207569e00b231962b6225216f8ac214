@@ -1,0 +1,46 @@
+LICENSE
+  s_ab5d80c731a01e::t_3a65b9b1df0e47 1-21
+README.md
+  s_ab5d80c731a01e::t_0ba6d6b8783066 30-33
+  s_ab5d80c731a01e::t_7a51748d4c251f 3-29
+  s_ab5d80c731a01e::t_ec1ac9519893be 1-2
+package.json
+  s_ab5d80c731a01e::t_0ba6d6b8783066 5
+  h_b5d3d6c96498a3 4
+  s_ab5d80c731a01e::t_7ddc922f9be42b 2
+  s_ab5d80c731a01e::t_cc488386a93800 1
+  s_ab5d80c731a01e::t_e01e6f2060f76f 6-8
+AGENTS.md
+  h_b5d3d6c96498a3 1-262
+src/sidepanel/components/Tabs.module.css
+  s_fd212ac40441c9::t_43467f9e7fe74a 1-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f63a7d85d207569e00b231962b6225216f8ac214",
+  "prompts": {},
+  "humans": {
+    "h_b5d3d6c96498a3": {
+      "author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  },
+  "sessions": {
+    "s_ab5d80c731a01e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "89770e17-676e-4f00-9bb0-cfdb0b6f402b",
+        "model": "claude-opus-4.8"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    },
+    "s_fd212ac40441c9": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8399db44-5822-4bbe-a46b-a013dc39d35e",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
