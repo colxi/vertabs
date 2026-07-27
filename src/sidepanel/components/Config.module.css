@@ -1,0 +1,400 @@
+/* ── Overlay shell ─────────────────────────────────────────────────── */
+.overlay {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.38rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+.backBtn:hover { color: var(--text); background: var(--surface-2); }
+
+.title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+/* ── Section accordion ─────────────────────────────────────────────── */
+.section {
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: none;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sectionHeader:hover { background: var(--surface-2); }
+
+.chevron {
+  font-size: 0.69rem;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+}
+.chevronOpen { transform: rotate(90deg); }
+
+.sectionBody {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Row / Label / Control ─────────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.label {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Slider ────────────────────────────────────────────────────────── */
+.slider {
+  width: 120px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ── Text input ────────────────────────────────────────────────────── */
+.textInput {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+}
+.textInput:focus {
+  border-color: var(--accent);
+}
+
+/* ── Color picker ──────────────────────────────────────────────────── */
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.colorPicker {
+  width: 28px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+}
+.colorHex {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* ── Toggle switch ─────────────────────────────────────────────────── */
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggleOn { background: var(--accent); }
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.toggleOn .toggleThumb { transform: translateX(16px); }
+
+/* ── Segmented control ─────────────────────────────────────────────── */
+.segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.segmented button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.segmented button:not(:last-child) { border-right: 1px solid var(--border); }
+.segmented button:hover { background: var(--surface-2); }
+.segActive {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* ── Mode cards ────────────────────────────────────────────────────── */
+.modeCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+}
+.modeCard:hover { background: var(--surface-2); }
+.modeCardSelected {
+  border-color: var(--accent);
+  background: var(--active-bg);
+}
+
+.modeIcon { font-size: 1.54rem; }
+.modeLabel { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.modeDesc { font-size: 0.77rem; color: var(--text-dim); }
+
+/* ── Notice ────────────────────────────────────────────────────────── */
+.notice {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-top: 2px;
+}
+
+/* ── Select ────────────────────────────────────────────────────────── */
+select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* ── Shortcuts list ────────────────────────────────────────────────── */
+.scList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid transparent;
+  cursor: grab;
+  transition: background 0.15s;
+}
+.scRow:hover { background: var(--surface-2); border-color: var(--border); }
+
+.dragHandle {
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.scFavicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.scInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.scName {
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scUrl {
+  font-size: 0.77rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scEditRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+.scEditRow input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 4px 7px;
+  width: 100%;
+}
+.scEditRow input:focus { outline: none; border-color: var(--accent); }
+
+.scEditActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.scEditActions button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.scEditActions button:hover { background: var(--surface-hover); color: var(--text); }
+
+.btnPrimary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+.btnPrimary:hover { opacity: 0.85; }
+
+/* ── Icon buttons ──────────────────────────────────────────────────── */
+.iconBtn, .iconBtnDanger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.iconBtn:hover { opacity: 1; background: var(--surface-hover); }
+.iconBtnDanger:hover { opacity: 1; background: rgba(248, 113, 113, 0.15); }
+
+/* ── Add row button ────────────────────────────────────────────────── */
+.addRowBtn {
+  margin-top: 4px;
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 7px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.addRowBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--active-bg);
+}
+
+/* ── Bookmark source checkboxes ────────────────────────────────────── */
+.subRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.2rem 0 0.4rem 1rem;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkRow input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}

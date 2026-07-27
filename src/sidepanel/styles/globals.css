@@ -1,0 +1,41 @@
+/* ─── Reset / Base ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #1a1b1e;
+  --surface: #25262b;
+  --surface-2: #2c2e33;
+  --surface-hover: #33363d;
+  --border: #373a40;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --active-bg: #2e2060;
+  --danger: #f87171;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font-size-base: 13px;
+  font-size: var(--font-size-base);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+body::-webkit-scrollbar { width: 4px; }
+body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+button { font-family: inherit; }
+
+a { color: inherit; text-decoration: none; }

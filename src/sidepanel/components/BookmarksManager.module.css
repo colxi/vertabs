@@ -1,0 +1,204 @@
+.manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ── Folder row ────────────────────────────────────────────────────── */
+.folderWrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.folderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-sm);
+  padding: 3px 2px;
+  transition: background 0.12s;
+}
+.folderRow:hover { background: var(--surface-2); }
+.folderRow:hover .rowActions { opacity: 1; }
+
+.folderToggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  padding: 3px 4px;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  text-align: left;
+}
+.folderToggle:hover { background: var(--surface-hover); }
+
+.folderIcon { font-size: 1rem; flex-shrink: 0; }
+
+.folderName {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  transition: transform 0.18s;
+}
+.chevronOpen { transform: rotate(90deg); }
+
+/* ── Bookmark row ──────────────────────────────────────────────────── */
+.bookmarkRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+}
+.bookmarkRow:hover { background: var(--surface-2); }
+.bookmarkRow:hover .rowActions { opacity: 1; }
+
+.favicon {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.bookmarkInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.bookmarkTitle {
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bookmarkUrl {
+  font-size: 0.77rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Row actions ───────────────────────────────────────────────────── */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.iconBtn, .iconBtnDanger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 3px;
+  border-radius: 3px;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
+}
+.iconBtn:hover { background: var(--surface-hover); color: var(--text); }
+.iconBtnDanger:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+/* ── Children indent ───────────────────────────────────────────────── */
+.children {
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+  margin-left: 8px;
+  margin-top: 1px;
+}
+
+/* ── Forms ─────────────────────────────────────────────────────────── */
+.addFormWrap {
+  padding: 4px 0 4px 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+.form input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 4px 7px;
+  width: 100%;
+}
+.form input:focus { outline: none; border-color: var(--accent); }
+
+.formActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.formActions button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.formActions button:hover { background: var(--surface-hover); color: var(--text); }
+
+.btnPrimary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+.btnPrimary:hover { opacity: 0.85; }
+
+/* ── Root add buttons ──────────────────────────────────────────────── */
+.rootActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.addBtn {
+  flex: 1;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.77rem;
+  padding: 5px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+.addBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--active-bg);
+}

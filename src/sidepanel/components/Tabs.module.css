@@ -1,0 +1,166 @@
+.section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.header:hover { background: var(--surface-2); }
+
+.title {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.badge {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+.chevron {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  transition: transform 0.2s;
+}
+.collapsed .chevron { transform: rotate(-90deg); }
+
+.content { padding: 0 8px 8px; }
+
+.searchBar { padding-bottom: 6px; }
+
+.searchBar input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.92rem;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.searchBar input:focus { border-color: var(--accent); }
+.searchBar input::placeholder { color: var(--text-muted); }
+
+.windowGroup { margin-bottom: 4px; }
+
+.windowLabel {
+  font-size: 0.77rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  padding: 6px 6px 3px;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+  user-select: none;
+}
+.tabItem:hover { background: var(--surface-2); }
+.tabItem.active { background: var(--active-bg); }
+.tabItem[draggable="true"]:active { opacity: 0.5; }
+
+.dragHandle {
+  visibility: hidden;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: grab;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 2px;
+}
+.tabItem:hover .dragHandle { visibility: visible; }
+
+.dropIndicator {
+  height: 2px;
+  margin: 1px 6px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.dropTail {
+  height: 8px;
+}
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.faviconPlaceholder {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  align-self: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.tabInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tabTitle {
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.tabDomain {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.92rem;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.tabItem:hover .closeBtn { display: block; }
+.closeBtn:hover { color: var(--danger); background: rgba(248, 113, 113, 0.1); }
