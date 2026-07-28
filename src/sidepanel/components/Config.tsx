@@ -47,6 +47,7 @@ export function Config({
           onReorder={onReorderShortcut}
         />
         <BookmarksSection />
+        <ExportImportSection shortcuts={shortcuts} />
       </div>
     </div>
   );
@@ -481,6 +482,180 @@ function BookmarksSection() {
   return (
     <Section title="Bookmarks">
       <BookmarksManager />
+    </Section>
+  );
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+
+interface ExportData {
+  version: 1;
+  exportedAt: string;
+  shortcuts?: Array<{ name: string; url: string; favIconUrl?: string }>;
+  bookmarks?: chrome.bookmarks.BookmarkTreeNode[];
+  tabs?: Array<{ title: string; url: string; windowId: number }>;
+}
+
+function ExportImportSection({ shortcuts }: { shortcuts: Shortcut[] }) {
+  const [inclShortcuts,  setInclShortcuts]  = useState(true);
+  const [inclBookmarks,  setInclBookmarks]  = useState(true);
+  const [inclTabs,       setInclTabs]       = useState(true);
+  const [status,         setStatus]         = useState<string | null>(null);
+  const importRef = useRef<HTMLInputElement>(null);
+
+  function showStatus(msg: string) {
+    setStatus(msg);
+    setTimeout(() => setStatus(null), 3000);
+  }
+
+  async function handleExport() {
+    const data: ExportData = { version: 1, exportedAt: new Date().toISOString() };
+
+    if (inclShortcuts) {
+      // Read original URLs from storage so exported URL is always the defined one
+      const stored = await new Promise<Record<string, string>>((resolve) =>
+        chrome.storage.local.get("sidebar-shortcut-urls", (r) =>
+          resolve((r["sidebar-shortcut-urls"] as Record<string, string>) ?? {})
+        )
+      );
+      data.shortcuts = shortcuts.map((sc) => ({
+        name:       sc.name,
+        url:        stored[sc.id] || sc.url,
+        favIconUrl: sc.favIconUrl,
+      }));
+    }
+
+    if (inclBookmarks) {
+      const tree = await chrome.bookmarks.getTree();
+      data.bookmarks = tree;
+    }
+
+    if (inclTabs) {
+      const tabs = await chrome.tabs.query({ currentWindow: true });
+      data.tabs = tabs
+        .filter((t) => t.url && !t.pinned)
+        .map((t) => ({ title: t.title ?? "", url: t.url ?? "", windowId: t.windowId }));
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `vertabs-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showStatus("Exported successfully");
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input so the same file can be re-imported
+    e.target.value = "";
+
+    let data: ExportData;
+    try {
+      data = JSON.parse(await file.text()) as ExportData;
+    } catch {
+      showStatus("Invalid file — could not parse JSON");
+      return;
+    }
+
+    if (data.version !== 1) {
+      showStatus("Unsupported file version");
+      return;
+    }
+
+    let imported = 0;
+
+    if (data.shortcuts?.length) {
+      for (const sc of data.shortcuts) {
+        if (!sc.url) continue;
+        await chrome.tabs.create({ url: sc.url, pinned: true });
+        imported++;
+      }
+    }
+
+    if (data.bookmarks?.length) {
+      // Re-create the full bookmark tree under the existing roots
+      async function importNode(
+        node: chrome.bookmarks.BookmarkTreeNode,
+        parentId: string
+      ) {
+        if (node.url) {
+          await chrome.bookmarks.create({ parentId, title: node.title, url: node.url });
+          imported++;
+        } else if (node.children) {
+          // Skip the virtual root nodes (id "0", "1", "2") — write into them directly
+          const isRoot = node.id === "0" || node.id === "1" || node.id === "2";
+          const folderId = isRoot
+            ? node.id
+            : (await chrome.bookmarks.create({ parentId, title: node.title })).id;
+          for (const child of node.children) {
+            await importNode(child, folderId);
+          }
+        }
+      }
+      for (const root of data.bookmarks) {
+        await importNode(root, root.id === "0" ? "1" : root.id);
+      }
+    }
+
+    if (data.tabs?.length) {
+      for (const tab of data.tabs) {
+        if (!tab.url) continue;
+        await chrome.tabs.create({ url: tab.url, active: false });
+        imported++;
+      }
+    }
+
+    showStatus(`Imported ${imported} item${imported !== 1 ? "s" : ""}`);
+  }
+
+  const noneSelected = !inclShortcuts && !inclBookmarks && !inclTabs;
+
+  return (
+    <Section title="Export / Import" defaultOpen={false}>
+      <div className={styles.exportCheckboxes}>
+        <label className={styles.checkRow}>
+          <input type="checkbox" checked={inclShortcuts} onChange={(e) => setInclShortcuts(e.target.checked)} />
+          Shortcuts
+        </label>
+        <label className={styles.checkRow}>
+          <input type="checkbox" checked={inclBookmarks} onChange={(e) => setInclBookmarks(e.target.checked)} />
+          Bookmarks
+        </label>
+        <label className={styles.checkRow}>
+          <input type="checkbox" checked={inclTabs} onChange={(e) => setInclTabs(e.target.checked)} />
+          Open tabs
+        </label>
+      </div>
+
+      <div className={styles.exportActions}>
+        <button
+          className={styles.exportBtn}
+          onClick={handleExport}
+          disabled={noneSelected}
+        >
+          ↓ Export to JSON
+        </button>
+        <button
+          className={styles.importBtn}
+          onClick={() => importRef.current?.click()}
+        >
+          ↑ Import from JSON
+        </button>
+      </div>
+
+      <input
+        ref={importRef}
+        type="file"
+        accept=".json,application/json"
+        style={{ display: "none" }}
+        onChange={handleImport}
+      />
+
+      {status && <p className={styles.exportStatus}>{status}</p>}
     </Section>
   );
 }

@@ -87,4 +87,46 @@ describe("Shortcuts", () => {
     fireEvent.click(removeBtns[0]);
     expect(onRemove).toHaveBeenCalledWith("1");
   });
+
+  it("navigates to the stored original URL on click, not the live tab URL", () => {
+    // Storage has a different URL than shortcut.url (simulating a tab that navigated away)
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: string, cb: (r: Record<string, unknown>) => void) => {
+        cb({ "sidebar-shortcut-urls": { "1": "https://original.com" } });
+      }
+    );
+
+    render(<Shortcuts {...defaultProps} />);
+    // Click the first shortcut item (title = "Site 1")
+    const item = screen.getByTitle("Site 1");
+    fireEvent.click(item);
+
+    expect(chrome.tabs.update).toHaveBeenCalledWith(1, {
+      active: true,
+      url: "https://original.com",
+    });
+  });
+
+  it("backfills storage and navigates when no storage entry exists for a shortcut", () => {
+    // Storage is empty — simulates a pre-existing pinned tab with no stored URL
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: string, cb: (r: Record<string, unknown>) => void) => {
+        cb({ "sidebar-shortcut-urls": {} });
+      }
+    );
+
+    render(<Shortcuts {...defaultProps} />);
+    const item = screen.getByTitle("Site 1");
+    fireEvent.click(item);
+
+    // Should backfill storage with the current shortcut.url
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      "sidebar-shortcut-urls": { "1": "https://a.com" },
+    });
+    // And navigate to it
+    expect(chrome.tabs.update).toHaveBeenCalledWith(1, {
+      active: true,
+      url: "https://a.com",
+    });
+  });
 });

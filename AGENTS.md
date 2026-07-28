@@ -128,14 +128,27 @@ Shortcuts are backed by Chrome's **pinned tabs** — there is no separate shortc
 
 - `useShortcuts` calls `chrome.tabs.query({ pinned: true, currentWindow: true })` to get the list.
 - It listens to `onCreated`, `onRemoved`, `onUpdated`, `onMoved`, `onDetached`, `onAttached` to keep the list live.
-- **Add** → `chrome.tabs.create({ url, pinned: true })`.
-- **Remove** → `chrome.tabs.remove(tabId)` — closes the pinned tab.
-- **Click** → `chrome.tabs.update(tabId, { active: true })` — switches to the pinned tab.
+- **Add** → `chrome.tabs.create({ url, pinned: true })`. The original URL is immediately written to `sidebar-shortcut-urls` in `chrome.storage.local` keyed by tab ID.
+- **Remove** → `chrome.tabs.remove(tabId)` — closes the pinned tab. The storage entry is also deleted via `onRemoved`.
+- **Click** → reads the original URL from `sidebar-shortcut-urls` storage, then calls `chrome.tabs.update(tabId, { active: true, url: originalUrl })` — **always navigates back to the defined URL**, regardless of where the tab currently is. If no storage entry exists (e.g. pre-existing pinned tab), the current `shortcut.url` is backfilled into storage on first click and used from then on.
 - **Reorder** → `chrome.tabs.move(tabId, { index: toIndex })`.
-- **Name** is derived from `tab.title` (auto-updates as the page loads). Fallback: URL hostname.
+- **Name** is derived from `tab.title` (auto-updates as the page loads). Fallback: URL hostname derived from the original URL.
 - **Favicon** uses `tab.favIconUrl` from the Chrome tab object (more reliable than `/favicon.ico`). Falls back to `https://${hostname}/favicon.ico`.
 - In **compact mode**, shortcuts are shown as icon-only buttons (`CompactShortcuts`).
 - Drag-and-drop reordering is supported in both the main grid and the Config shortcuts list.
+
+**Original URL storage contract (`sidebar-shortcut-urls`):**
+
+| Situation | Behaviour |
+| --------- | --------- |
+| Shortcut added via `add(url)` | `url` written to storage under the new tab ID immediately after `chrome.tabs.create` resolves |
+| Tab navigates away after creation | Storage entry unchanged — original URL is preserved |
+| Shortcut clicked | Original URL read from storage; tab navigated back to it |
+| No storage entry found on click | Current `shortcut.url` (React state) written to storage as the original, then used for navigation — self-healing backfill |
+| Shortcut URL edited via Config | Storage entry updated to the new URL; tab navigated to new URL |
+| Shortcut removed | Storage entry deleted |
+
+> **Never** use `tab.url` (the live tab URL) as the shortcut URL after creation — it reflects the user's current navigation and will diverge from the defined shortcut URL.
 
 ### Bookmarks
 

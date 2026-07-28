@@ -204,12 +204,18 @@ function ShortcutItem({
       onDragEnd={onDragEnd}
       onClick={() => {
         if (!didDrag.current) {
-          // Always navigate to the stored original URL, not the tab's current URL.
-          // Read from storage directly so we never use a stale React state value.
           chrome.storage.local.get("sidebar-shortcut-urls", (result) => {
             const originalUrls = (result["sidebar-shortcut-urls"] as Record<string, string>) ?? {};
-            const originalUrl  = originalUrls[shortcut.id] || shortcut.url;
-            chrome.tabs.update(Number(shortcut.id), { active: true, url: originalUrl });
+            let url = originalUrls[shortcut.id];
+            if (!url) {
+              // No stored original URL — backfill it now from the shortcut's
+              // current url (which equals the original at creation time if the
+              // tab hasn't been navigated yet, or shortcut.url from the hook).
+              url = shortcut.url;
+              originalUrls[shortcut.id] = url;
+              chrome.storage.local.set({ "sidebar-shortcut-urls": originalUrls });
+            }
+            chrome.tabs.update(Number(shortcut.id), { active: true, url });
           });
         }
         didDrag.current = false;
