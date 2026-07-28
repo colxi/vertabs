@@ -86,8 +86,6 @@ export function useShortcuts() {
   const add = useCallback(async (url: string) => {
     const tab = await chrome.tabs.create({ url, pinned: true });
     if (tab.id != null) {
-      // Save the original URL BEFORE refresh() can run so tabToShortcut always
-      // finds it, even if onUpdated fires before this completes.
       const originalUrls = await loadOriginalUrls();
       originalUrls[String(tab.id)] = url;
       await saveOriginalUrls(originalUrls);
