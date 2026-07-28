@@ -1,7 +1,9 @@
 .section {
   background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .header {
@@ -11,31 +13,31 @@
   gap: 6px;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s;
+  transition: background var(--transition-fast);
 }
 .header:hover { background: var(--surface-2); }
 
 .title {
   flex: 1;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
 }
 
 .chevron {
-  color: var(--text-muted);
-  font-size: 0.92rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
   transition: transform 0.2s;
 }
 .collapsed .chevron { transform: rotate(-90deg); }
 
 .content {
-  padding: 0 8px 8px;
+  padding: 0 8px 10px;
 }
 
-.searchBar { padding-bottom: 6px; }
+.searchBar { padding-bottom: 8px; }
 
 .searchBar input {
   width: 100%;
@@ -43,18 +45,26 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 0.92rem;
-  padding: 6px 10px;
+  font-size: 0.88rem;
+  padding: 7px 10px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   font-family: inherit;
 }
-.searchBar input:focus { border-color: var(--accent); }
-.searchBar input::placeholder { color: var(--text-muted); }
+.searchBar input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.searchBar input::placeholder { color: var(--text-dim); }
 
-.tree { display: flex; flex-direction: column; gap: 1px; }
+.tree { display: flex; flex-direction: column; }
 
-/* Folder */
+/* ── Node wrapper — needed so ::before/::after indicators sit outside the item */
+.nodeWrap {
+  position: relative;
+}
+
+/* ── Folder ──────────────────────────────────────────────────────────────── */
 .folder { }
 
 .folderHeader {
@@ -63,93 +73,124 @@
   gap: 6px;
   padding: 5px 6px;
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: grab;
   user-select: none;
+  position: relative;
+  transition: background var(--transition-fast);
 }
 .folderHeader:hover { background: var(--surface-2); }
 
-.folderIcon { font-size: 1rem; flex-shrink: 0; }
+/* Folder highlighted as move-into target */
+.folderDropTarget {
+  background: var(--accent-dim) !important;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.folderIcon { font-size: 0.95rem; flex-shrink: 0; }
 
 .folderName {
   flex: 1;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
 }
 
 .folderChevron {
-  color: var(--text-muted);
-  font-size: 0.69rem;
+  color: var(--text-dim);
+  font-size: 0.65rem;
   transition: transform 0.18s;
 }
 .open .folderChevron { transform: rotate(90deg); }
 
-.children { padding-left: 16px; }
+.children { padding-left: 14px; }
 
-/* Bookmark item */
+/* ── Bookmark leaf ────────────────────────────────────────────────────────── */
 .bookmarkItem {
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 5px 6px;
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 0.12s;
+  cursor: grab;
+  position: relative;
+  transition: background var(--transition-fast);
 }
 .bookmarkItem:hover { background: var(--surface-2); }
 
+/* Dragged item */
+.bookmarkDragging {
+  opacity: 0.35;
+}
+
+/* Ghost placeholder row — displaces siblings during drag */
+.bmPlaceholder {
+  height: 26px;
+  margin: 2px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  border: 1.5px dashed var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-glow);
+  pointer-events: none;
+  animation: bmPulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes bmPulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1;   }
+}
+
+/* ── Misc ─────────────────────────────────────────────────────────────────── */
 .favicon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 3px;
   flex-shrink: 0;
 }
 
 .bookmarkTitle {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
 }
 
 .highlight {
   background: var(--accent);
   color: #fff;
   border-radius: 2px;
-  padding: 0 1px;
+  padding: 0 2px;
 }
 
 .empty {
-  font-size: 0.92rem;
-  color: var(--text-muted);
+  font-size: 0.88rem;
+  color: var(--text-dim);
   padding: 8px 12px;
+  text-align: center;
 }
 
 .sourceTitle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  padding: 0.6rem 0.75rem 0.2rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding: 0.6rem 0.75rem 0.25rem;
   cursor: pointer;
   user-select: none;
+  transition: color var(--transition-fast);
 }
-
-.sourceTitle:hover {
-  color: var(--text);
-}
+.sourceTitle:hover { color: var(--text-muted); }
 
 .sourceChevron {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   transition: transform 0.18s;
 }
-
-.sourceTitleCollapsed .sourceChevron {
-  transform: rotate(-90deg);
-}
+.sourceTitleCollapsed .sourceChevron { transform: rotate(-90deg); }

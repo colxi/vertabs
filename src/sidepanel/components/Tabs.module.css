@@ -1,7 +1,9 @@
 .section {
   background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .header {
@@ -11,38 +13,39 @@
   gap: 6px;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s;
+  transition: background var(--transition-fast);
 }
 .header:hover { background: var(--surface-2); }
 
 .title {
   flex: 1;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
 }
 
 .badge {
   background: var(--surface-2);
-  color: var(--text-muted);
-  font-size: 0.77rem;
+  color: var(--text-dim);
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 20px;
+  border: 1px solid var(--border-subtle);
 }
 
 .chevron {
-  color: var(--text-muted);
-  font-size: 0.92rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
   transition: transform 0.2s;
 }
 .collapsed .chevron { transform: rotate(-90deg); }
 
-.content { padding: 0 8px 8px; }
+.content { padding: 0 8px 10px; }
 
-.searchBar { padding-bottom: 6px; }
+.searchBar { padding-bottom: 8px; }
 
 .searchBar input {
   width: 100%;
@@ -50,22 +53,25 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 0.92rem;
-  padding: 6px 10px;
+  font-size: 0.88rem;
+  padding: 7px 10px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   font-family: inherit;
 }
-.searchBar input:focus { border-color: var(--accent); }
-.searchBar input::placeholder { color: var(--text-muted); }
+.searchBar input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.searchBar input::placeholder { color: var(--text-dim); }
 
-.windowGroup { margin-bottom: 4px; }
+.windowGroup { margin-bottom: 6px; }
 
 .windowLabel {
-  font-size: 0.77rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
   padding: 6px 6px 3px;
 }
@@ -74,50 +80,52 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 6px;
+  padding: 6px 6px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background var(--transition-fast);
   user-select: none;
 }
 .tabItem:hover { background: var(--surface-2); }
-.tabItem.active { background: var(--active-bg); }
+.tabItem.active {
+  background: var(--active-bg);
+  border: 1px solid var(--active-border);
+}
 .tabItem[draggable="true"]:active { opacity: 0.5; }
 
-.dragHandle {
-  visibility: hidden;
-  color: var(--text-dim);
-  font-size: 1rem;
-  cursor: grab;
-  flex-shrink: 0;
-  line-height: 1;
-  padding: 0 2px;
-}
-.tabItem:hover .dragHandle { visibility: visible; }
 
-.dropIndicator {
-  height: 2px;
-  margin: 1px 6px;
-  border-radius: 1px;
-  background: var(--accent);
+.tabItem.dragging {
+  opacity: 0.35;
+}
+
+/* Ghost placeholder row — displaces siblings during drag */
+.placeholder {
+  height: 32px;
+  margin: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  border: 1.5px dashed var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-glow);
   pointer-events: none;
+  animation: placeholderPulse 0.9s ease-in-out infinite alternate;
 }
 
-.dropTail {
-  height: 8px;
+@keyframes placeholderPulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1;   }
 }
 
 .favicon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 3px;
   flex-shrink: 0;
   align-self: center;
 }
 
 .faviconPlaceholder {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 3px;
   flex-shrink: 0;
   align-self: center;
@@ -134,7 +142,7 @@
 }
 
 .tabTitle {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -142,8 +150,8 @@
 }
 
 .tabDomain {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  color: var(--text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -153,14 +161,18 @@
   display: none;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-dim);
   cursor: pointer;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   line-height: 1;
-  padding: 1px 3px;
-  border-radius: 4px;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
   font-family: inherit;
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 .tabItem:hover .closeBtn { display: block; }
-.closeBtn:hover { color: var(--danger); background: rgba(248, 113, 113, 0.1); }
+.closeBtn:hover {
+  color: var(--danger);
+  background: var(--danger-dim);
+}

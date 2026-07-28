@@ -16,7 +16,7 @@
   justify-content: space-between;
   border-radius: var(--radius-sm);
   padding: 3px 2px;
-  transition: background 0.12s;
+  transition: background var(--transition-fast);
 }
 .folderRow:hover { background: var(--surface-2); }
 .folderRow:hover .rowActions { opacity: 1; }
@@ -27,18 +27,19 @@
   gap: 5px;
   background: none;
   border: none;
-  color: var(--text);
+  color: var(--text-muted);
   cursor: pointer;
   flex: 1;
   min-width: 0;
   padding: 3px 4px;
   border-radius: var(--radius-sm);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   text-align: left;
+  transition: color var(--transition-fast);
 }
-.folderToggle:hover { background: var(--surface-hover); }
+.folderToggle:hover { background: var(--surface-hover); color: var(--text); }
 
-.folderIcon { font-size: 1rem; flex-shrink: 0; }
+.folderIcon { font-size: 0.95rem; flex-shrink: 0; }
 
 .folderName {
   flex: 1;
@@ -51,7 +52,7 @@
 }
 
 .chevron {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--text-dim);
   flex-shrink: 0;
   transition: transform 0.18s;
@@ -65,7 +66,7 @@
   gap: 6px;
   padding: 4px 4px;
   border-radius: var(--radius-sm);
-  transition: background 0.12s;
+  transition: background var(--transition-fast);
 }
 .bookmarkRow:hover { background: var(--surface-2); }
 .bookmarkRow:hover .rowActions { opacity: 1; }
@@ -92,7 +93,7 @@
   text-overflow: ellipsis;
 }
 .bookmarkUrl {
-  font-size: 0.77rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
@@ -105,7 +106,7 @@
   align-items: center;
   gap: 2px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
   flex-shrink: 0;
 }
 
@@ -113,47 +114,50 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   padding: 2px 3px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   color: var(--text-muted);
-  transition: background 0.12s, color 0.12s;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .iconBtn:hover { background: var(--surface-hover); color: var(--text); }
-.iconBtnDanger:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
+.iconBtnDanger:hover { background: var(--danger-dim); color: var(--danger); }
 
 /* ── Children indent ───────────────────────────────────────────────── */
 .children {
-  padding-left: 14px;
-  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  border-left: 1px solid var(--border-subtle);
   margin-left: 8px;
   margin-top: 1px;
 }
 
 /* ── Forms ─────────────────────────────────────────────────────────── */
 .addFormWrap {
-  padding: 4px 0 4px 14px;
+  padding: 4px 0 4px 12px;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px;
+  gap: 5px;
+  padding: 8px;
   background: var(--surface-2);
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 .form input {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   color: var(--text);
   font-size: 0.85rem;
-  padding: 4px 7px;
+  padding: 5px 7px;
   width: 100%;
+  font-family: inherit;
+  outline: none;
 }
-.form input:focus { outline: none; border-color: var(--accent); }
+.form input:focus { border-color: var(--accent); }
 
 .formActions {
   display: flex;
@@ -163,12 +167,13 @@
 .formActions button {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   color: var(--text-muted);
-  font-size: 0.85rem;
-  padding: 3px 10px;
+  font-size: 0.82rem;
+  padding: 4px 12px;
   cursor: pointer;
   font-family: inherit;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .formActions button:hover { background: var(--surface-hover); color: var(--text); }
 
@@ -177,13 +182,13 @@
   border-color: var(--accent) !important;
   color: #fff !important;
 }
-.btnPrimary:hover { opacity: 0.85; }
+.btnPrimary:hover { background: var(--accent-hover) !important; }
 
 /* ── Root add buttons ──────────────────────────────────────────────── */
 .rootActions {
   display: flex;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 .addBtn {
   flex: 1;
@@ -191,14 +196,14 @@
   border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
-  font-size: 0.77rem;
-  padding: 5px;
+  font-size: 0.75rem;
+  padding: 6px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
   font-family: inherit;
 }
 .addBtn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: var(--active-bg);
+  background: var(--accent-dim);
 }
