@@ -2,6 +2,8 @@ import React, { useRef, useState } from "react";
 import styles from "./Tabs.module.css";
 import { faviconUrl } from "../utils/favicon";
 
+const TAB_DRAG_TYPE = "application/x-vertabs-tab";
+
 interface Props {
   tabs: chrome.tabs.Tab[];
   onFocus: (tabId: number) => void;
@@ -22,10 +24,13 @@ function domain(url: string | undefined): string {
 export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedChange, query, onQueryChange }: Props) {
   const q = query.trim().toLowerCase();
 
-  // dragOverIndex: the slot index where the drop indicator is shown.
-  // -1 = none. Index refers to position in visibleTabs.
-  const [dragOverIndex, setDragOverIndex] = useState<number>(-1);
+  // dropSlot: index in visibleTabs where the placeholder appears.
+  // Inserting before item[i] = slot i. Inserting after last = slot visibleTabs.length.
+  const [dropSlot, setDropSlotState] = useState<number | null>(null);
+  const dropSlotRef = useRef<number | null>(null);
+  function setDropSlot(v: number | null) { dropSlotRef.current = v; setDropSlotState(v); }
   const dragTabId = useRef<number | null>(null);
+  const dragIndex = useRef<number | null>(null); // index in visibleTabs
 
   const visibleTabs = tabs.filter((t) => {
     if (t.pinned) return false;
@@ -36,29 +41,71 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
     );
   });
 
-  function handleDragStart(tabId: number) {
-    dragTabId.current = tabId;
+  function handleDragStart(e: React.DragEvent, tab: chrome.tabs.Tab, i: number) {
+    dragTabId.current = tab.id!;
+    dragIndex.current = i;
+    e.dataTransfer.setData(TAB_DRAG_TYPE, JSON.stringify({
+      url: tab.url ?? "",
+      title: tab.title ?? "",
+      favIconUrl: tab.favIconUrl ?? "",
+    }));
+    e.dataTransfer.effectAllowed = "move";
   }
 
-  function handleDragOver(e: React.DragEvent, index: number) {
+  function handleDragOver(e: React.DragEvent, i: number) {
+    if (!e.dataTransfer.types.includes(TAB_DRAG_TYPE)) return;
     e.preventDefault();
-    setDragOverIndex(index);
+    // Top half → slot before this item; bottom half → slot after
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const slot = e.clientY < rect.top + rect.height / 2 ? i : i + 1;
+    setDropSlot(slot);
   }
 
-  function handleDrop(e: React.DragEvent, toVisibleIndex: number) {
+  function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    setDragOverIndex(-1);
+    const slot = dropSlotRef.current;
+    setDropSlot(null);
     const fromId = dragTabId.current;
-    if (fromId == null) return;
-    const target = visibleTabs[toVisibleIndex];
-    if (!target || target.id === fromId) return;
-    // Map back to the real tab index in the window.
+    const fromIdx = dragIndex.current;
+    dragTabId.current = null;
+    dragIndex.current = null;
+    if (fromId == null || slot == null || fromIdx == null) return;
+    // Don't move if slot is adjacent to the item (would be a no-op)
+    if (slot === fromIdx || slot === fromIdx + 1) return;
+    const targetIdx = slot > fromIdx ? slot - 1 : slot;
+    const target = visibleTabs[targetIdx];
+    if (!target) return;
     onMove(fromId, target.index);
   }
 
   function handleDragEnd() {
     dragTabId.current = null;
-    setDragOverIndex(-1);
+    dragIndex.current = null;
+    setDropSlot(null);
+  }
+
+  // Build the rendered list interleaving placeholder at dropSlot
+  const items: React.ReactNode[] = [];
+  visibleTabs.forEach((tab, i) => {
+    if (dropSlot === i) {
+      items.push(<div key="placeholder" className={styles.placeholder} />);
+    }
+    items.push(
+      <TabItem
+        key={tab.id}
+        tab={tab}
+        isDragging={dragTabId.current === tab.id}
+        onFocus={onFocus}
+        onClose={onClose}
+        onDragStart={(e) => handleDragStart(e, tab, i)}
+        onDragOver={(e) => handleDragOver(e, i)}
+        onDrop={handleDrop}
+        onDragEnd={handleDragEnd}
+      />
+    );
+  });
+  if (dropSlot === visibleTabs.length) {
+    items.push(<div key="placeholder" className={styles.placeholder} />);
   }
 
   return (
@@ -83,38 +130,16 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
             />
           </div>
 
-          {visibleTabs.map((tab, i) => (
-            <React.Fragment key={tab.id}>
-              {dragOverIndex === i && <div className={styles.dropIndicator} />}
-              <TabItem
-                tab={tab}
-                onFocus={onFocus}
-                onClose={onClose}
-                onDragStart={() => handleDragStart(tab.id!)}
-                onDragOver={(e) => handleDragOver(e, i)}
-                onDrop={(e) => handleDrop(e, i)}
-                onDragEnd={handleDragEnd}
-              />
-            </React.Fragment>
-          ))}
-          {/* Drop indicator at the very end */}
-          {dragOverIndex === visibleTabs.length && <div className={styles.dropIndicator} />}
-          {/* Drop zone for the tail slot */}
-          {visibleTabs.length > 0 && (
-            <div
-              className={styles.dropTail}
-              onDragOver={(e) => { e.preventDefault(); setDragOverIndex(visibleTabs.length); }}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOverIndex(-1);
-                const fromId = dragTabId.current;
-                if (fromId == null) return;
-                const last = visibleTabs[visibleTabs.length - 1];
-                if (last && last.id !== fromId) onMove(fromId, last.index + 1);
-              }}
-              onDragLeave={() => setDragOverIndex(-1)}
-            />
-          )}
+          <div
+            onDragOver={(e) => {
+              // Handle drag-over on the container for the "after last" slot
+              if (!e.dataTransfer.types.includes(TAB_DRAG_TYPE)) return;
+              e.preventDefault();
+            }}
+            onDrop={handleDrop}
+          >
+            {items}
+          </div>
         </div>
       )}
     </section>
@@ -123,6 +148,7 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
 
 function TabItem({
   tab,
+  isDragging,
   onFocus,
   onClose,
   onDragStart,
@@ -131,9 +157,10 @@ function TabItem({
   onDragEnd,
 }: {
   tab: chrome.tabs.Tab;
+  isDragging: boolean;
   onFocus: (tabId: number) => void;
   onClose: (tabId: number) => void;
-  onDragStart: () => void;
+  onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
@@ -144,7 +171,11 @@ function TabItem({
 
   return (
     <div
-      className={`${styles.tabItem} ${tab.active ? styles.active : ""}`}
+      className={[
+        styles.tabItem,
+        tab.active ? styles.active : "",
+        isDragging ? styles.dragging : "",
+      ].filter(Boolean).join(" ")}
       draggable
       onClick={() => tab.id != null && onFocus(tab.id)}
       onDragStart={onDragStart}
@@ -153,7 +184,6 @@ function TabItem({
       onDragEnd={onDragEnd}
       title={tab.url}
     >
-      <div className={styles.dragHandle} title="Drag to reorder">⠿</div>
       {showImg ? (
         <img
           className={styles.favicon}

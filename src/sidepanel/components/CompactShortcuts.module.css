@@ -2,27 +2,30 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   width: 100%;
 }
 
 .item {
   background: var(--surface);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform 0.14s, box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .item:hover {
   background: var(--surface-2);
   border-color: var(--border);
   transform: scale(1.08);
+  box-shadow: var(--shadow-md);
 }
 
 .item:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
+  box-shadow: none;
 }
 
 .iconWrap {

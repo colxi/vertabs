@@ -17,10 +17,13 @@ async function saveOriginalUrls(map: Record<string, string>) {
 }
 
 function tabToShortcut(tab: chrome.tabs.Tab, originalUrl?: string): Shortcut {
+  // url: always the stored original URL — never the live navigated URL.
+  // If originalUrl isn't stored yet (race on create), fall back to tab.url
+  // which equals the original URL at creation time.
   const url = originalUrl || tab.url || tab.pendingUrl || "";
   let name = tab.title || "";
   if (!name) {
-    try { name = new URL(tab.url || tab.pendingUrl || "").hostname; } catch { name = url; }
+    try { name = new URL(url).hostname; } catch { name = url; }
   }
   return {
     id: String(tab.id),
@@ -83,6 +86,8 @@ export function useShortcuts() {
   const add = useCallback(async (url: string) => {
     const tab = await chrome.tabs.create({ url, pinned: true });
     if (tab.id != null) {
+      // Save the original URL BEFORE refresh() can run so tabToShortcut always
+      // finds it, even if onUpdated fires before this completes.
       const originalUrls = await loadOriginalUrls();
       originalUrls[String(tab.id)] = url;
       await saveOriginalUrls(originalUrls);

@@ -2,6 +2,11 @@
 
 A Chrome MV3 extension that adds a persistent sidebar to every page. The sidebar shows pinned-tab shortcuts, bookmarks, and open tabs. It supports two display modes (floating iframe overlay and Chrome native Side Panel) and is fully configurable via an in-sidebar settings overlay.
 
+# Coding instructions
+
+- After every iteration run the tests to validate everything works as expected
+- After every iteration perform a build
+
 ---
 
 ## Tech stack
