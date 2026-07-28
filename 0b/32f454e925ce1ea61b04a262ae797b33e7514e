@@ -1,0 +1,30 @@
+src/sidepanel/components/Config.module.css
+  s_ed21a9f9ee915e::t_510fa03dc5fbc9 431-482
+src/sidepanel/components/Shortcuts.spec.tsx
+  s_ed21a9f9ee915e::t_378954a5cf22b4 90-131
+src/sidepanel/components/Shortcuts.tsx
+  s_ed21a9f9ee915e::t_1d6b73da9a6d0b 218
+  s_ed21a9f9ee915e::t_6aa30999f90f9f 209-217
+src/sidepanel/components/Config.tsx
+  s_ed21a9f9ee915e::t_fcd32f5c4502ef 488-661
+  s_ed21a9f9ee915e::t_848f0563b58487 50
+AGENTS.md
+  s_ed21a9f9ee915e::t_2986a96fc35dde 131-133,135,140-151
+  s_ed21a9f9ee915e::t_89ff7d6c18f75b 152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "0b32f454e925ce1ea61b04a262ae797b33e7514e",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
