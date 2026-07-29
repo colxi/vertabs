@@ -1,0 +1,82 @@
+CHANGELOG.md
+  s_ed21a9f9ee915e::t_d130b2bf914004 5-30
+src/sidepanel/components/Bookmarks.tsx
+  s_ed21a9f9ee915e::t_c637636637371e 546
+  s_ed21a9f9ee915e::t_dfec40a5ad3117 576
+  s_ed21a9f9ee915e::t_f4b1989a1a6609 577-604
+  s_ed21a9f9ee915e::t_1b3bb887dd8559 348-373
+  s_ed21a9f9ee915e::t_97f25683332fcd 193-201
+  s_ed21a9f9ee915e::t_d9757f21270cf9 501-531
+  s_ed21a9f9ee915e::t_e4e8048858da77 164
+  s_ed21a9f9ee915e::t_5b548c22b08495 552-555
+src/sidepanel/components/Bookmarks.module.css
+  s_ed21a9f9ee915e::t_9714b0b653009c 40-54,62
+  s_ed21a9f9ee915e::t_8f46f9f23a4bc5 110-123
+  s_ed21a9f9ee915e::t_8e7ece67a78462 106
+  s_ed21a9f9ee915e::t_d2720f49a6649e 285,326-340
+  s_ed21a9f9ee915e::t_813a83a739058f 263,265-271,279-284
+  s_ed21a9f9ee915e::t_38e51260814cbf 286
+src/sidepanel/components/Tabs.tsx
+  s_ed21a9f9ee915e::t_f09a0de87fd4f8 234,246,251-252
+  s_ed21a9f9ee915e::t_d7cb0b4f90aebb 103,106-108,110,112-121,123-150,152,154-159,164
+  s_ed21a9f9ee915e::t_6091e7a4cb0d3f 257
+  s_ed21a9f9ee915e::t_ae038036832251 6-19,22-23,26,39,46-51,85,105,111,122,151,153,162
+  s_ed21a9f9ee915e::t_a478e1c40fa0ca 181-189
+tsconfig.json
+  s_ed21a9f9ee915e::t_2d519f0d5a6f50 13-14
+src/sidepanel/hooks/useTabs.spec.ts
+  s_ed21a9f9ee915e::t_7a7b4c6964fc4b 83-125
+  s_ed21a9f9ee915e::t_5f208de6b1cb6a 64
+  s_ed21a9f9ee915e::t_e0f2f6dda1730d 71
+src/sidepanel/components/Shortcuts.tsx
+  s_ed21a9f9ee915e::t_0a2941ed4b0080 78-89
+  s_ed21a9f9ee915e::t_fa1c00c338a85a 99-100
+  s_ed21a9f9ee915e::t_b598c77c087654 8
+public/manifest.json
+  s_ed21a9f9ee915e::t_8739c91056c93d 6
+src/typings.d.ts
+  s_ed21a9f9ee915e::t_3d7cb6b9cc996c 1-4
+src/test/setup.ts
+  s_ed21a9f9ee915e::t_f80ac5cb0128e4 95-101
+  s_ed21a9f9ee915e::t_3a2e9f13fd2f04 102-108
+src/sidepanel/hooks/useTabs.ts
+  s_ed21a9f9ee915e::t_c1e62f1bc24ac0 4-5,9-14,19,25-31,38-43,59
+  s_ed21a9f9ee915e::t_6b66875ba7caa2 52
+src/sidepanel/components/Tabs.spec.tsx
+  s_ed21a9f9ee915e::t_da594e786294b3 25,28
+  s_ed21a9f9ee915e::t_91b5d20f75d512 122-191
+src/sidepanel/components/Bookmarks.spec.tsx
+  s_ed21a9f9ee915e::t_d3c638eeaaadf4 14-16,20
+  s_ed21a9f9ee915e::t_424a1410fa5d25 177-179,182-189,192-193,199,207,211,217,230,235-236,241-242,247-252,257-260,263-268,273,275
+  s_ed21a9f9ee915e::t_4979098c3452f7 240,253-255,261-262
+  s_ed21a9f9ee915e::t_59eccefe99f405 112
+  s_ed21a9f9ee915e::t_f185e1f8fe33d4 180
+  s_ed21a9f9ee915e::t_949c6c1eaeef33 181
+  s_ed21a9f9ee915e::t_f49f5428aae0c2 226-227,229,231-234,237-239,243-246
+  s_ed21a9f9ee915e::t_650b0635e9dd8c 158-176,190-191,194-198,200-206,208-210,212-216,218-225,228,256,269-272,274,276-289
+src/sidepanel/App.tsx
+  s_ed21a9f9ee915e::t_61d757cb7fc58d 238
+  s_ed21a9f9ee915e::t_55320a18b79941 22
+src/sidepanel/components/Tabs.module.css
+  s_ed21a9f9ee915e::t_03239823f6bd27 98
+  s_ed21a9f9ee915e::t_7924625a9d2f8f 50-64,72
+  s_ed21a9f9ee915e::t_46ccc0f5c59ef1 107
+  s_ed21a9f9ee915e::t_0082c7f0930544 94-97,99-101,111-112,118
+  s_ed21a9f9ee915e::t_4becc93f383a97 102-106,108-110,113-117,119-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "591c9a54fa177b060a0a3f36408aa27de08516cb",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
