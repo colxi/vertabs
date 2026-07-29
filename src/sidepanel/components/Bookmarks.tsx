@@ -161,7 +161,7 @@ export function Bookmarks({
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
       const existing = tabs.find((t) => t.url === url);
       if (existing?.id != null) { chrome.tabs.update(existing.id, { active: true }); return; }
-      if (openLinksInNewTab) { chrome.tabs.create({ url }); }
+      if (openLinksInNewTab) { chrome.tabs.create({ url, index: 0 }); }
       else { const a = tabs.find((t) => t.active); if (a?.id != null) chrome.tabs.update(a.id, { url }); }
     });
   }
@@ -190,12 +190,15 @@ export function Bookmarks({
         {!collapsed && (
           <div className={styles.content}>
             <div className={styles.searchBar}>
-              <input
-                value={query}
-                onChange={(e) => onQueryChange(e.target.value)}
-                placeholder="Search bookmarks…"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div className={styles.searchBarWrap}>
+                <span className={styles.searchIcon}>🔍</span>
+                <input
+                  value={query}
+                  onChange={(e) => onQueryChange(e.target.value)}
+                  placeholder="Search bookmarks…"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
             </div>
 
             <div
@@ -342,6 +345,32 @@ function BookmarkNode({
 
   const myDrop = dropInfo?.targetId === node.id ? dropInfo.position : null;
 
+  // ── Rename folder on double-click ────────────────────────────────────────
+  const [renaming, setRenaming] = useState(false);
+  const [renameVal, setRenameVal] = useState("");
+  const renameRef = useRef<HTMLInputElement>(null);
+
+  function startRename(e: React.MouseEvent) {
+    e.stopPropagation();
+    setRenameVal(node.title || "");
+    setRenaming(true);
+    setTimeout(() => {
+      renameRef.current?.focus();
+      renameRef.current?.select();
+    }, 0);
+  }
+
+  function confirmRename() {
+    const title = renameVal.trim();
+    if (title && title !== node.title) chrome.bookmarks.update(node.id, { title });
+    setRenaming(false);
+  }
+
+  function keyDownRename(e: React.KeyboardEvent) {
+    if (e.key === "Enter")  { e.preventDefault(); confirmRename(); }
+    if (e.key === "Escape") { e.stopPropagation(); setRenaming(false); }
+  }
+
   // ── New subfolder state ───────────────────────────────────────────────────
   const [addingFolder, setAddingFolder] = useState(false);
   const [folderName, setFolderName]     = useState("");
@@ -469,21 +498,37 @@ function BookmarkNode({
   );
 
   const element = isFolder ? (
-    <div
-      className={cls}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={() => onToggle(node.id)}
-    >
-      <span className={styles.folderIcon}>{open ? "📂" : "📁"}</span>
-      <span className={styles.folderName}>{node.title || "Bookmarks"}</span>
-      <button className={styles.addFolderBtn} title="New folder" onClick={openAddFolder}>+</button>
-      {deleteBtn}
-      <span className={styles.folderChevron}>▶</span>
-    </div>
+    renaming ? (
+      <div className={cls}>
+        <span className={styles.folderIcon}>{open ? "📂" : "📁"}</span>
+        <input
+          ref={renameRef}
+          className={styles.renameInput}
+          value={renameVal}
+          onChange={(e) => setRenameVal(e.target.value)}
+          onKeyDown={keyDownRename}
+          onBlur={confirmRename}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    ) : (
+      <div
+        className={cls}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => onToggle(node.id)}
+        onDoubleClick={startRename}
+      >
+        <span className={styles.folderIcon}>{open ? "📂" : "📁"}</span>
+        <span className={styles.folderName}>{node.title || "Bookmarks"}</span>
+        {deleteBtn}
+        <button className={styles.addFolderBtn} title="New folder" onClick={openAddFolder}>+</button>
+        <span className={styles.folderChevron}>▶</span>
+      </div>
+    )
   ) : node.url ? (
     <div
       role="button"
@@ -498,13 +543,16 @@ function BookmarkNode({
         chrome.tabs.query({ currentWindow: true }, (tabs) => {
           const existing = tabs.find((t) => t.url === url);
           if (existing?.id != null) { chrome.tabs.update(existing.id, { active: true }); return; }
-          if (openLinksInNewTab) { chrome.tabs.create({ url }); }
+          if (openLinksInNewTab) { chrome.tabs.create({ url, index: 0 }); }
           else { const a = tabs.find((t) => t.active); if (a?.id != null) chrome.tabs.update(a.id, { url }); }
         });
       }}
     >
       <Favicon url={node.url} className={styles.favicon} />
-      <span className={styles.bookmarkTitle}>{node.title || node.url}</span>
+      <div className={styles.bookmarkInfo}>
+        <span className={styles.bookmarkTitle}>{node.title || node.url}</span>
+        <span className={styles.bookmarkDomain}>{(() => { try { return new URL(node.url).hostname.replace(/^www\./, ""); } catch { return ""; } })()}</span>
+      </div>
       {deleteBtn}
     </div>
   ) : null;
@@ -525,33 +573,35 @@ function BookmarkNode({
         </div>
       )}
       {myDrop === "after"  && <div className={styles.bmPlaceholder} />}
-      {open && (
-        <div
-          className={styles.children}
-          onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
-          onDrop={(e) => {
-            if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const info = dropInfoRef.current;
-            setDropInfo(null);
-            const id = dragId.current;
-            dragId.current = null;
-            if (!id || !info || id === info.targetId) return;
-            moveBookmark(id, info);
-          }}
-        >
-          {children.map((child) => (
-            <BookmarkNode
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openLinksInNewTab={openLinksInNewTab}
-              onDropTabOnFolder={onDropTabOnFolder}
-            />
-          ))}
+      {isFolder && (
+        <div className={`${styles.childrenWrap} ${open ? styles.childrenOpen : ""}`}>
+          <div
+            className={styles.children}
+            onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
+            onDrop={(e) => {
+              if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const info = dropInfoRef.current;
+              setDropInfo(null);
+              const id = dragId.current;
+              dragId.current = null;
+              if (!id || !info || id === info.targetId) return;
+              moveBookmark(id, info);
+            }}
+          >
+            {children.map((child) => (
+              <BookmarkNode
+                key={child.id}
+                node={child}
+                depth={depth + 1}
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openLinksInNewTab={openLinksInNewTab}
+                onDropTabOnFolder={onDropTabOnFolder}
+              />
+            ))}
+          </div>
         </div>
       )}
     </>
