@@ -40,9 +40,10 @@ export function App() {
     if (!configLoaded) return;
     const root = document.documentElement;
     root.style.setProperty("--font-size-base", `${config.fontSize}px`);
+    root.style.setProperty("--item-spacing",   `${config.itemSpacing}px`);
     root.style.setProperty("--accent",       config.accentColor);
     root.style.setProperty("--accent-hover", config.accentColor + "dd");
-  }, [config.fontSize, config.accentColor, configLoaded]);
+  }, [config.fontSize, config.accentColor, config.itemSpacing, configLoaded]);
 
   // ── Notify content script of state / pin changes ─────────────────────────
   useEffect(() => {
@@ -213,7 +214,7 @@ export function App() {
                   onReorder={reorder}
                 />
               )}
-              {config.showBookmarks && (
+              {config.showBookmarks && (config.showBookmarksBar || config.showOtherBookmarks) && (
                 <Bookmarks
                   tree={tree}
                   isOpen={isOpen}

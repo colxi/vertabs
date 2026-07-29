@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 6px;
+  padding: var(--item-spacing) 6px;
   border-radius: var(--radius-sm);
   cursor: grab;
   user-select: none;
@@ -98,7 +98,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 6px;
+  padding: var(--item-spacing) 6px;
   border-radius: var(--radius-sm);
   cursor: grab;
   transition: background var(--transition-fast);
@@ -134,7 +134,96 @@
   outline-offset: -2px;
 }
 
-/* ── Misc ─────────────────────────────────────────────────────────────────── */
+/* Row highlighted red while awaiting delete confirmation */
+.deleteConfirm {
+  background: var(--danger-dim) !important;
+}
+
+/* ── Delete button — hidden until row is hovered ──────────────────────────── */
+.deleteBtn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.folderHeader:hover .deleteBtn,
+.bookmarkItem:hover .deleteBtn {
+  display: flex;
+  align-items: center;
+}
+.deleteBtn:hover {
+  color: var(--danger);
+  background: var(--danger-dim);
+}
+/* Confirm state: always visible, red background, shows "?" */
+.deleteBtnConfirm {
+  display: flex !important;
+  align-items: center;
+  color: #fff !important;
+  background: var(--danger) !important;
+}
+.deleteBtnConfirm:hover {
+  background: #e05252 !important;
+}
+
+/* ── New folder inline + button (appears in row headers) ─────────────────── */
+.addFolderBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  /* Hidden by default, shown on row hover */
+  opacity: 0;
+  pointer-events: none;
+}
+.folderHeader:hover .addFolderBtn,
+.sourceTitle:hover .addFolderBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+.addFolderBtn:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* Inline folder name input (renders below the row) */
+.newFolderInput {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  margin-top: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+.newFolderInput input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  min-width: 0;
+}
+.newFolderInput input::placeholder { color: var(--text-dim); }
 .favicon {
   width: 15px;
   height: 15px;
@@ -143,6 +232,7 @@
 }
 
 .bookmarkTitle {
+  flex: 1;
   font-size: 0.88rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -167,7 +257,7 @@
 .sourceTitle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 4px;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -179,6 +269,10 @@
   transition: color var(--transition-fast);
 }
 .sourceTitle:hover { color: var(--text-muted); }
+
+.sourceTitleText {
+  flex: 1;
+}
 
 .sourceChevron {
   font-size: 0.65rem;

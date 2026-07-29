@@ -224,6 +224,17 @@ function AppearanceSection({
         />
       </Row>
 
+      <Row label={`Row spacing — ${config.itemSpacing}px`}>
+        <input
+          type="range"
+          min={2}
+          max={10}
+          value={config.itemSpacing}
+          onChange={(e) => onUpdate({ itemSpacing: Number(e.target.value) })}
+          className={styles.slider}
+        />
+      </Row>
+
       <Row label="Accent color">
         <div className={styles.colorRow}>
           <input

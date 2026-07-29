@@ -6,6 +6,7 @@ A Chrome MV3 extension that adds a persistent sidebar to every page. The sidebar
 
 - After every iteration run the tests to validate everything works as expected
 - After every iteration perform a build
+- when opening a new PR, add to the changelog with a short description of the changes made, with multiple bullet points if necessary. For each entry use : feat, fix, refactor, chore, or docs to indicate the type of change. For example:
 
 ---
 
@@ -139,14 +140,14 @@ Shortcuts are backed by Chrome's **pinned tabs** — there is no separate shortc
 
 **Original URL storage contract (`sidebar-shortcut-urls`):**
 
-| Situation | Behaviour |
-| --------- | --------- |
-| Shortcut added via `add(url)` | `url` written to storage under the new tab ID immediately after `chrome.tabs.create` resolves |
-| Tab navigates away after creation | Storage entry unchanged — original URL is preserved |
-| Shortcut clicked | Original URL read from storage; tab navigated back to it |
-| No storage entry found on click | Current `shortcut.url` (React state) written to storage as the original, then used for navigation — self-healing backfill |
-| Shortcut URL edited via Config | Storage entry updated to the new URL; tab navigated to new URL |
-| Shortcut removed | Storage entry deleted |
+| Situation                         | Behaviour                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Shortcut added via `add(url)`     | `url` written to storage under the new tab ID immediately after `chrome.tabs.create` resolves                             |
+| Tab navigates away after creation | Storage entry unchanged — original URL is preserved                                                                       |
+| Shortcut clicked                  | Original URL read from storage; tab navigated back to it                                                                  |
+| No storage entry found on click   | Current `shortcut.url` (React state) written to storage as the original, then used for navigation — self-healing backfill |
+| Shortcut URL edited via Config    | Storage entry updated to the new URL; tab navigated to new URL                                                            |
+| Shortcut removed                  | Storage entry deleted                                                                                                     |
 
 > **Never** use `tab.url` (the live tab URL) as the shortcut URL after creation — it reflects the user's current navigation and will diverge from the defined shortcut URL.
 
