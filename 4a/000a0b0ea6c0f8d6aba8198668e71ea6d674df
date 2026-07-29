@@ -1,0 +1,70 @@
+src/sidepanel/components/Shortcuts.module.css
+  s_ed21a9f9ee915e::t_aefc7672093cee 167-176
+  s_ed21a9f9ee915e::t_9d85e9c43da19f 101-104
+src/e2e/helpers.ts
+  s_ed21a9f9ee915e::t_f1625eaac64fcc 136,148
+  s_ed21a9f9ee915e::t_460b06dd8f330a 1-135,137-147,149-152
+src/sidepanel/App.tsx
+  s_ed21a9f9ee915e::t_2b283bc7491549 18
+src/e2e/tabs.spec.ts
+  s_ed21a9f9ee915e::t_f380dc9d4ad5c7 1-149
+src/sidepanel/App.module.css
+  s_ed21a9f9ee915e::t_2bc59843c50e5f 19,22
+  s_ed21a9f9ee915e::t_ecb51a9dc60c60 20
+src/sidepanel/components/Shortcuts.spec.tsx
+  s_ed21a9f9ee915e::t_f6c16486037faf 83,86-97
+src/e2e/bookmarks.spec.ts
+  s_ed21a9f9ee915e::t_a16a47a11bc3e8 1-196
+src/sidepanel/components/Config.tsx
+  s_ed21a9f9ee915e::t_2d164dd7d0ff30 38
+  s_ed21a9f9ee915e::t_6fa34597ab7caf 51-53
+  s_ed21a9f9ee915e::t_e9a63491b54695 13
+src/e2e/shortcuts.spec.ts
+  s_ed21a9f9ee915e::t_fe4effbfe58e96 1-91
+src/sidepanel/components/Bookmarks.tsx
+  s_ed21a9f9ee915e::t_8122487fc51a30 261-274,276-304,306-311,313-318,321-332
+  s_ed21a9f9ee915e::t_f0b52f5f4159a6 275
+  s_ed21a9f9ee915e::t_1884c53b3c555a 227-234
+  s_ed21a9f9ee915e::t_2d76023a790db9 305,312
+  s_ed21a9f9ee915e::t_4fd9f212b249f6 319-320
+  s_ed21a9f9ee915e::t_8cd500f2c1af27 67-71,75-77,81,83
+  s_ed21a9f9ee915e::t_bc884e2b6e45e6 164
+src/sidepanel/hooks/useShortcuts.spec.ts
+  s_ed21a9f9ee915e::t_b2862d3c0b3eb7 66
+src/sidepanel/components/Config.module.css
+  s_ed21a9f9ee915e::t_ab9a938b20d77b 80-89,96
+src/sidepanel/components/Config.spec.tsx
+  s_ed21a9f9ee915e::t_5e9e77d7b28279 44-45
+  s_ed21a9f9ee915e::t_a767b4b6f836fc 1-18,24,31,33,35-36,38,40-41,52,54,58-59,65,70-71,73,76-77,79,82-83,85,87,92-93,95,97,99-100,102,104-106,108,115-116,118-120,122-126,128-130,132,134-136,138-143
+  s_ed21a9f9ee915e::t_b7b595aaaa0bf2 19-23,25-30,32,34,37,39,42-43,46-51,53,55-57,60-64,66-69,72,74-75,78,80-81,84,86,88-91,94,96,98,101,103,107,109-114,117,121,127,131,133,137,144
+  s_ed21a9f9ee915e::t_005548615dcdd8 145
+src/sidepanel/hooks/useShortcuts.ts
+  s_ed21a9f9ee915e::t_9537c31b59e0ca 87
+CHANGELOG.md
+  s_ed21a9f9ee915e::t_3ff89112c3cf66 5-32
+src/sidepanel/components/Bookmarks.module.css
+  s_ed21a9f9ee915e::t_79f690531bb054 289,296-297
+  s_ed21a9f9ee915e::t_011e280299d15b 279,288,290-292
+  s_ed21a9f9ee915e::t_cbb38600451561 293-295
+src/sidepanel/components/Shortcuts.tsx
+  s_ed21a9f9ee915e::t_375995b47808f2 1
+  s_ed21a9f9ee915e::t_e50d93b997968b 257-259,261
+  s_ed21a9f9ee915e::t_a20cc18af41e84 200-217
+  s_ed21a9f9ee915e::t_89fd16417d7cd8 220
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4a000a0b0ea6c0f8d6aba8198668e71ea6d674df",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
