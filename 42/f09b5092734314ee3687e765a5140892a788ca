@@ -1,0 +1,64 @@
+src/sidepanel/components/Bookmarks.tsx
+  s_ed21a9f9ee915e::t_cbbe083e4e1159 295
+  s_ed21a9f9ee915e::t_2d0242f574a4ef 483
+  s_ed21a9f9ee915e::t_ac64d2420f4537 518-526
+  s_ed21a9f9ee915e::t_ba664830545951 367,369,373-380,387-391
+  s_ed21a9f9ee915e::t_9294b2028d56a1 267-287,296,300-308,310-320
+  s_ed21a9f9ee915e::t_a69156748c15b0 233-235
+  s_ed21a9f9ee915e::t_ae13507def536b 309,321
+  s_ed21a9f9ee915e::t_354dc94443e23a 345-366
+  s_ed21a9f9ee915e::t_76c70ad56437cb 457
+  s_ed21a9f9ee915e::t_22a05071b52a78 368,370-372,381-386,392-394,460-470,484,508
+  s_ed21a9f9ee915e::t_9494949580595e 1
+src/sidepanel/components/Tabs.module.css
+  s_ed21a9f9ee915e::t_0364d158f70fa9 83
+CHANGELOG.md
+  s_ed21a9f9ee915e::t_f64c4872902d36 1-70
+public/manifest.json
+  h_b5d3d6c96498a3 3
+src/sidepanel/index.html
+  h_b5d3d6c96498a3 6
+AGENTS.md
+  h_b5d3d6c96498a3 9,144
+src/sidepanel/App.tsx
+  s_ed21a9f9ee915e::t_ddacefd47c1b7f 43,46
+  s_ed21a9f9ee915e::t_1eef3dd4ec73e2 217
+src/sidepanel/components/Bookmarks.module.css
+  s_ed21a9f9ee915e::t_f9fb554459e1ea 67
+  s_ed21a9f9ee915e::t_d9e0f56b0df9d6 260,273-275
+  s_ed21a9f9ee915e::t_605cee13956c10 137-141
+  s_ed21a9f9ee915e::t_e6affc79ca099d 142-165,167-168,170-176,179,181,188,198,200-203,205-226
+  s_ed21a9f9ee915e::t_104530adcc9311 101
+  s_ed21a9f9ee915e::t_2bc5abf1988e8b 235
+  s_ed21a9f9ee915e::t_169c95ff34bbcb 166,169
+  s_ed21a9f9ee915e::t_3cfe4ad3320335 177-178,180,182-187,189-197,199,204
+  s_ed21a9f9ee915e::t_81aa5bca561808 276
+src/sidepanel/hooks/useConfig.ts
+  s_ed21a9f9ee915e::t_6fcac469cf56d2 18,36
+src/sidepanel/styles/globals.css
+  s_ed21a9f9ee915e::t_88d716796f313a 33
+src/sidepanel/components/Config.tsx
+  s_ed21a9f9ee915e::t_af39ff05bab967 227-233
+  s_ed21a9f9ee915e::t_b0e0a02525ff7b 224-226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "42f09b5092734314ee3687e765a5140892a788ca",
+  "prompts": {},
+  "humans": {
+    "h_b5d3d6c96498a3": {
+      "author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  },
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
