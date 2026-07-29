@@ -77,14 +77,15 @@
 }
 .chevronOpen { transform: rotate(90deg); }
 
-/* Animated section body using grid-template-rows trick */
+/* Animated section body — max-height approach is bulletproof across browsers */
 .sectionWrap {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .sectionWrapOpen {
-  grid-template-rows: 1fr;
+  max-height: 1200px; /* large enough for any section content */
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sectionBody {
@@ -93,7 +94,6 @@
   flex-direction: column;
   gap: 12px;
   background: var(--bg);
-  overflow: hidden;
 }
 
 /* ── Row / Label / Control ─────────────────────────────────────────── */

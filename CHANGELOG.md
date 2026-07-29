@@ -4,11 +4,11 @@
 
 ### Settings panel
 
-- refactor: Shortcuts block removed from Settings — shortcuts are managed directly from the main panel
-- refactor: Bookmarks block removed from Settings — bookmarks are managed directly from the main panel
-- refactor: "Show Bookmarks" and "Show Tabs" toggles removed from Content section — no longer needed
-- feat: all Settings sections now start **folded** by default (collapsed on open)
-- feat: Settings section fold/unfold is now **animated** using CSS `grid-template-rows: 0fr → 1fr` transition (same technique as bookmark folders)
+- refactor: Shortcuts block removed from Settings — managed directly from the main panel
+- refactor: Bookmarks block removed from Settings — managed directly from the main panel
+- fix: Show Bookmarks (with Bookmarks bar / Other bookmarks sub-checkboxes) and Show Tabs toggles restored to Content section
+- feat: all Settings sections now start **folded** by default
+- feat: Settings section fold/unfold is **animated** using `max-height` transition (`overflow: hidden; max-height: 0 → 1200px`)
 
 ### Shortcuts
 

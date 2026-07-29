@@ -116,16 +116,16 @@ describe("Config", () => {
 
   // ── Removed controls ──────────────────────────────────────────────────────
 
-  it("Content section has no Show Bookmarks toggle", () => {
+  it("Content section has Show Bookmarks toggle", () => {
     render(<Config {...defaultProps} />);
     fireEvent.click(getSectionBtn("Content"));
-    expect(screen.queryByText("Show Bookmarks")).not.toBeInTheDocument();
+    expect(screen.getByText("Show Bookmarks")).toBeInTheDocument();
   });
 
-  it("Content section has no Show Tabs toggle", () => {
+  it("Content section has Show Tabs toggle", () => {
     render(<Config {...defaultProps} />);
     fireEvent.click(getSectionBtn("Content"));
-    expect(screen.queryByText("Show Tabs")).not.toBeInTheDocument();
+    expect(screen.getByText("Show Tabs")).toBeInTheDocument();
   });
 
   it("Content section retains Open links in control", () => {

@@ -276,6 +276,38 @@ function ContentSection({
           onChange={(v) => onUpdate({ showShortcuts: v })}
         />
       </Row>
+      <Row label="Show Bookmarks">
+        <Toggle
+          checked={config.showBookmarks}
+          onChange={(v) => onUpdate({ showBookmarks: v })}
+        />
+      </Row>
+      {config.showBookmarks && (
+        <div className={styles.subRows}>
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={config.showBookmarksBar}
+              onChange={(e) => onUpdate({ showBookmarksBar: e.target.checked })}
+            />
+            Bookmarks bar
+          </label>
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={config.showOtherBookmarks}
+              onChange={(e) => onUpdate({ showOtherBookmarks: e.target.checked })}
+            />
+            Other bookmarks
+          </label>
+        </div>
+      )}
+      <Row label="Show Tabs">
+        <Toggle
+          checked={config.showTabs}
+          onChange={(v) => onUpdate({ showTabs: v })}
+        />
+      </Row>
 
       <Row label="Open links in">
         <div className={styles.segmented}>
