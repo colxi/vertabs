@@ -109,15 +109,25 @@
 
 .dragging { opacity: 0.4; }
 
-/* box-shadow indicators: zero layout impact, no gaps between elements */
-.dropBefore {
-  box-shadow: 0 -2px 0 0 var(--accent);
+/* Ghost placeholder that displaces siblings to show drop position.
+   pointer-events: none ensures drops fall through to the parent container,
+   which has its own onDrop handler reading dropInfoRef. */
+.bmPlaceholder {
+  height: 24px;
+  margin: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  border: 1.5px dashed var(--accent);
+  pointer-events: none;
+  animation: bmPulse 0.9s ease-in-out infinite alternate;
 }
 
-.dropAfter {
-  box-shadow: 0 2px 0 0 var(--accent);
+@keyframes bmPulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1;   }
 }
 
+/* Folder highlighted as move-into target */
 .dropInside {
   background: var(--accent-dim) !important;
   outline: 2px solid var(--accent);

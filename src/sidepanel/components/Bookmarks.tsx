@@ -368,8 +368,6 @@ function BookmarkNode({
     isFolder ? styles.folderHeader : styles.bookmarkItem,
     open && isFolder           ? styles.open           : "",
     myDrop === "inside"        ? styles.dropInside     : "",
-    myDrop === "before"        ? styles.dropBefore     : "",
-    myDrop === "after"         ? styles.dropAfter      : "",
     dragId.current === node.id ? styles.dragging       : "",
   ].filter(Boolean).join(" ");
 
@@ -415,7 +413,9 @@ function BookmarkNode({
 
   return (
     <>
+      {myDrop === "before" && <div className={styles.bmPlaceholder} />}
       {element}
+      {myDrop === "after"  && <div className={styles.bmPlaceholder} />}
       {open && (
         <div
           className={styles.children}
