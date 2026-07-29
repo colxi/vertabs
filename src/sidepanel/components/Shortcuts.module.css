@@ -98,6 +98,10 @@
   cursor: grabbing;
 }
 
+.item.deleteConfirm {
+  background: var(--danger-dim) !important;
+}
+
 .item.dropTarget {
   background: var(--accent-dim);
   outline: 2px dashed var(--accent);
@@ -159,6 +163,16 @@
   color: var(--danger);
   background: var(--danger-dim);
   border-color: var(--danger);
+}
+/* Confirm state: always visible, red background */
+.removeBtnConfirm {
+  display: flex !important;
+  color: #fff !important;
+  background: var(--danger) !important;
+  border-color: var(--danger) !important;
+}
+.removeBtnConfirm:hover {
+  background: #e05252 !important;
 }
 
 /* Modal */

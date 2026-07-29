@@ -64,17 +64,23 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 // ── Search helpers ────────────────────────────────────────────────────────────
 
+interface SearchResult {
+  node: chrome.bookmarks.BookmarkTreeNode;
+  path: string[]; // folder names from root to parent
+}
+
 function collectMatches(
   nodes: chrome.bookmarks.BookmarkTreeNode[],
   query: string,
-): chrome.bookmarks.BookmarkTreeNode[] {
-  const results: chrome.bookmarks.BookmarkTreeNode[] = [];
+  path: string[] = [],
+): SearchResult[] {
+  const results: SearchResult[] = [];
   for (const node of nodes) {
     if (node.url) {
       if (node.title.toLowerCase().includes(query) || node.url.toLowerCase().includes(query))
-        results.push(node);
+        results.push({ node, path });
     } else if (node.children) {
-      results.push(...collectMatches(node.children, query));
+      results.push(...collectMatches(node.children, query, [...path, node.title]));
     }
   }
   return results;
@@ -155,7 +161,7 @@ export function Bookmarks({
     return false;
   });
   const showGroupTitles = showBookmarksBar && showOtherBookmarks;
-  const flatResults = q ? collectMatches(roots, q) : null;
+  const flatResults: SearchResult[] | null = q ? collectMatches(roots, q) : null;
 
   function openLink(url: string) {
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
@@ -218,14 +224,14 @@ export function Bookmarks({
               {flatResults ? (
                 flatResults.length === 0
                   ? <p className={styles.empty}>No bookmarks match "{query}"</p>
-                  : flatResults.map((node) => (
-                    <div key={node.id} role="button" className={styles.bookmarkItem}
-                      onClick={() => openLink(node.url!)}>
-                      <Favicon url={node.url!} className={styles.favicon} />
-                      <span className={styles.bookmarkTitle}>
-                        <Highlight text={node.title || node.url!} query={query} />
-                      </span>
-                    </div>
+                  : flatResults.map((result) => (
+                    <SearchResultItem
+                      key={result.node.id}
+                      result={result}
+                      query={query}
+                      openLink={openLink}
+                      dragId={dragId}
+                    />
                   ))
               ) : (
                 roots.map((root) => (
@@ -249,6 +255,78 @@ export function Bookmarks({
         )}
       </section>
     </DragContext.Provider>
+  );
+}
+
+// ── SearchResultItem ──────────────────────────────────────────────────────────
+
+function SearchResultItem({
+  result,
+  query,
+  openLink,
+  dragId,
+}: {
+  result: SearchResult;
+  query: string;
+  openLink: (url: string) => void;
+  dragId: React.MutableRefObject<string | null>;
+}) {
+  const { node, path } = result;
+  const didDrag = useRef(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      timerRef.current = setTimeout(() => setConfirmDelete(false), 2000);
+      return;
+    }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    chrome.bookmarks.remove(node.id);
+  }
+
+  const pathStr = path.length > 0 ? path.join(" › ") : "";
+
+  const cls = [
+    styles.bookmarkItem,
+    confirmDelete ? styles.deleteConfirm : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div
+      role="button"
+      className={cls}
+      draggable
+      onDragStart={(e) => {
+        didDrag.current = true;
+        dragId.current = node.id;
+        e.dataTransfer.setData(BM_DRAG_TYPE, node.id);
+        e.dataTransfer.effectAllowed = "move";
+        e.stopPropagation();
+      }}
+      onDragEnd={() => { dragId.current = null; }}
+      onClick={() => { if (!didDrag.current) openLink(node.url!); didDrag.current = false; }}
+    >
+      <Favicon url={node.url!} className={styles.favicon} />
+      <div className={styles.bookmarkInfo}>
+        <span className={styles.bookmarkTitle}>
+          <Highlight text={node.title || node.url!} query={query} />
+        </span>
+        <span className={styles.bookmarkDomain}>{node.url}</span>
+        {pathStr && <span className={styles.bookmarkPath}>📁 {pathStr}</span>}
+      </div>
+      <button
+        className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ""}`}
+        title={confirmDelete ? "Click again to confirm delete" : "Delete bookmark"}
+        onClick={handleDelete}
+      >
+        {confirmDelete ? "?" : "✕"}
+      </button>
+    </div>
   );
 }
 

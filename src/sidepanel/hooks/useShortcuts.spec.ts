@@ -63,6 +63,7 @@ describe("useShortcuts", () => {
     expect(chrome.tabs.create).toHaveBeenCalledWith({
       url: "https://added.com",
       pinned: true,
+      active: false,
     });
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({

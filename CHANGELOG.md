@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Settings panel
+
+- refactor: Shortcuts block removed from Settings — shortcuts are managed directly from the main panel
+- refactor: Bookmarks block removed from Settings — bookmarks are managed directly from the main panel
+- refactor: "Show Bookmarks" and "Show Tabs" toggles removed from Content section — no longer needed
+- feat: all Settings sections now start **folded** by default (collapsed on open)
+- feat: Settings section fold/unfold is now **animated** using CSS `grid-template-rows: 0fr → 1fr` transition (same technique as bookmark folders)
+
+### Shortcuts
+
+- fix: removing a shortcut now requires two clicks — first click turns the item red, second click within 2 seconds confirms deletion (same pattern as bookmarks)
+- fix: creating a shortcut no longer switches to it immediately — `active: false` passed to `chrome.tabs.create` so the pinned tab is created in the background
+
+### Bookmarks search results
+
+- feat: search results now show a third line with the folder path (e.g. `📁 Work › Frontend`) below the URL
+- feat: search result items are now draggable to Shortcuts — dropping creates a pinned tab without navigating to it
+- fix: dragging a bookmark search result to Shortcuts no longer opens the bookmark URL in the current tab
+
+### Visual / UX
+
+- fix: sidebar scrollbar hidden (`scrollbar-width: none` + `::-webkit-scrollbar { display: none }`)
+- feat: scroll chaining prevented — `overscroll-behavior: contain` on the sidebar scroll container stops scroll from propagating to the underlying page at boundaries
+
+### Tests (+17 new tests, 120 → 137)
+
+- feat: `Config.spec.tsx` — new file, 17 tests covering: section headers render, Bookmarks/Shortcuts sections absent, all sections start folded (check `sectionWrapOpen` class), sections open on click, toggle twice collapses, removed controls absent, back button
+
 ### Tab groups
 
 - feat: tab groups are now displayed in the Open Tabs section with a colored vertical left border spanning the entire group block

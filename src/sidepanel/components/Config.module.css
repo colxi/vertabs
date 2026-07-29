@@ -77,12 +77,23 @@
 }
 .chevronOpen { transform: rotate(90deg); }
 
+/* Animated section body using grid-template-rows trick */
+.sectionWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sectionWrapOpen {
+  grid-template-rows: 1fr;
+}
+
 .sectionBody {
   padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: var(--bg);
+  overflow: hidden;
 }
 
 /* ── Row / Label / Control ─────────────────────────────────────────── */

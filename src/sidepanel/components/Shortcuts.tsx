@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import styles from "./Shortcuts.module.css";
 import { faviconUrl } from "../utils/favicon";
 import { Shortcut } from "../utils/shortcuts";
@@ -197,9 +197,27 @@ function ShortcutItem({
   const didDrag = useRef(false);
   const icon = shortcut.favIconUrl || faviconUrl(shortcut.url);
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+  }, []);
+
+  function handleRemove(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      confirmTimer.current = setTimeout(() => setConfirmDelete(false), 2000);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    onRemove(shortcut.id);
+  }
+
   return (
     <div
-      className={[styles.item, isDragging ? styles.dragging : ""].filter(Boolean).join(" ")}
+      className={[styles.item, isDragging ? styles.dragging : "", confirmDelete ? styles.deleteConfirm : ""].filter(Boolean).join(" ")}
       title={shortcut.name || shortcut.url}
       draggable
       onDragStart={(e) => {
@@ -236,13 +254,11 @@ function ShortcutItem({
       }}
     >
       <button
-        className={styles.removeBtn}
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(shortcut.id);
-        }}
+        className={`${styles.removeBtn} ${confirmDelete ? styles.removeBtnConfirm : ""}`}
+        title={confirmDelete ? "Click again to confirm" : "Remove shortcut"}
+        onClick={handleRemove}
       >
-        ✕
+        {confirmDelete ? "?" : "✕"}
       </button>
       <div className={styles.iconWrap}>
         <img

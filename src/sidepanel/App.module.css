@@ -16,9 +16,10 @@
   overflow-x: hidden;
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateX(0);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
 }
+.page::-webkit-scrollbar { display: none; }
 
 .pageSlideOut  { transform: translateX(-100%); }
 .pageSlideRight { transform: translateX(100%); }
