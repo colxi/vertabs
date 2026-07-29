@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Sidebar Tabs",
+  "name": "Vertabs",
   "version": "1.0.0",
   "description": "A sidebar with shortcuts, bookmarks, and open tabs.",
   "permissions": ["tabs", "bookmarks", "storage", "sidePanel"],
@@ -21,7 +21,11 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/sidepanel/index.html", "sidepanel.js", "sidepanel.css"],
+      "resources": [
+        "src/sidepanel/index.html",
+        "sidepanel.js",
+        "sidepanel.css"
+      ],
       "matches": ["<all_urls>"]
     }
   ],

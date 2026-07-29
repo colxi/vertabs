@@ -15,6 +15,7 @@ export interface SidebarConfig {
   showTabs: boolean;
   openLinksInNewTab: boolean;
   newTabUrl: string;
+  itemSpacing: number; // vertical padding (px) for list rows — 2..10
 }
 
 export const DEFAULT_CONFIG: SidebarConfig = {
@@ -32,6 +33,7 @@ export const DEFAULT_CONFIG: SidebarConfig = {
   showTabs: true,
   openLinksInNewTab: true,
   newTabUrl: "https://www.google.com",
+  itemSpacing: 4,
 };
 
 const STORAGE_KEY = "sidebar-config";

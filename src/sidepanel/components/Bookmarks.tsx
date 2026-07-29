@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState } from "react";
+import React, { createContext, useContext, useRef, useState, useEffect } from "react";
 import styles from "./Bookmarks.module.css";
 import { faviconUrl } from "../utils/favicon";
 
@@ -230,7 +230,9 @@ export function Bookmarks({
                     key={root.id}
                     root={root}
                     showTitle={showGroupTitles}
-                    collapsed={!!sourcesCollapsed[root.id]}
+                    // When only one source is shown there's no title to un-collapse it,
+                    // so force it open regardless of stored state.
+                    collapsed={showGroupTitles ? !!sourcesCollapsed[root.id] : false}
                     onCollapsedChange={(v) => onSourceCollapsedChange(root.id, v)}
                     isOpen={isOpen}
                     onToggle={onToggle}
@@ -262,6 +264,27 @@ function BookmarkSource({
   openLinksInNewTab: boolean;
   onDropTabOnFolder: (folderId: string, e: React.DragEvent) => void;
 }) {
+  const [addingFolder, setAddingFolder] = useState(false);
+  const [folderName, setFolderName]     = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function openAddFolder(e: React.MouseEvent) {
+    e.stopPropagation();
+    setAddingFolder(true);
+    setFolderName("");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+  function confirmAddFolder() {
+    const title = folderName.trim();
+    if (title) chrome.bookmarks.create({ parentId: root.id, title });
+    setAddingFolder(false);
+    setFolderName("");
+  }
+  function keyDownAddFolder(e: React.KeyboardEvent) {
+    if (e.key === "Enter")  { e.preventDefault(); confirmAddFolder(); }
+    if (e.key === "Escape") { e.stopPropagation(); setAddingFolder(false); }
+  }
+
   return (
     <div>
       {showTitle && (
@@ -269,21 +292,33 @@ function BookmarkSource({
           className={`${styles.sourceTitle} ${collapsed ? styles.sourceTitleCollapsed : ""}`}
           onClick={() => onCollapsedChange(!collapsed)}
         >
-          <span>{root.title}</span>
+          <span className={styles.sourceTitleText}>{root.title}</span>
+          <button className={styles.addFolderBtn} title="New folder" onClick={openAddFolder}>+</button>
           <span className={styles.sourceChevron}>▾</span>
         </div>
       )}
-      {!collapsed && (root.children ?? []).map((node) => (
-        <BookmarkNode
-          key={node.id}
-          node={node}
-          depth={0}
-          isOpen={isOpen}
-          onToggle={onToggle}
-          openLinksInNewTab={openLinksInNewTab}
-          onDropTabOnFolder={onDropTabOnFolder}
-        />
-      ))}
+      {addingFolder && (
+        <div className={styles.newFolderInput}>
+          <span className={styles.folderIcon}>📁</span>
+          <input ref={inputRef} value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            onKeyDown={keyDownAddFolder} onBlur={confirmAddFolder}
+            placeholder="Folder name…" />
+        </div>
+      )}
+      {!collapsed && (
+        (root.children ?? []).map((node) => (
+          <BookmarkNode
+            key={node.id}
+            node={node}
+            depth={0}
+            isOpen={isOpen}
+            onToggle={onToggle}
+            openLinksInNewTab={openLinksInNewTab}
+            onDropTabOnFolder={onDropTabOnFolder}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -306,6 +341,56 @@ function BookmarkNode({
   const open = isFolder && isOpen(node.id);
 
   const myDrop = dropInfo?.targetId === node.id ? dropInfo.position : null;
+
+  // ── New subfolder state ───────────────────────────────────────────────────
+  const [addingFolder, setAddingFolder] = useState(false);
+  const [folderName, setFolderName]     = useState("");
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  function openAddFolder(e: React.MouseEvent) {
+    e.stopPropagation();
+    setAddingFolder(true);
+    setFolderName("");
+    setTimeout(() => folderInputRef.current?.focus(), 0);
+  }
+  function confirmAddFolder() {
+    const title = folderName.trim();
+    if (title) chrome.bookmarks.create({ parentId: node.id, title });
+    setAddingFolder(false);
+    setFolderName("");
+  }
+  function keyDownAddFolder(e: React.KeyboardEvent) {
+    if (e.key === "Enter")  { e.preventDefault(); confirmAddFolder(); }
+    if (e.key === "Escape") { e.stopPropagation(); setAddingFolder(false); }
+  }
+
+  // ── Delete: two-click confirm with 2s timeout ─────────────────────────────
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirmDelete) {
+      // First click — enter confirm state and start timeout
+      setConfirmDelete(true);
+      confirmTimer.current = setTimeout(() => setConfirmDelete(false), 2000);
+      return;
+    }
+    // Second click — confirmed, delete
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    if (isFolder) {
+      chrome.bookmarks.removeTree(node.id);
+    } else {
+      chrome.bookmarks.remove(node.id);
+    }
+  }
+
+  // Clean up timer if component unmounts while in confirm state
+  useEffect(() => () => {
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+  }, []);
+
+  // ── Drag handlers ─────────────────────────────────────────────────────────
 
   function handleDragStart(e: React.DragEvent) {
     dragId.current = node.id;
@@ -369,7 +454,19 @@ function BookmarkNode({
     open && isFolder           ? styles.open           : "",
     myDrop === "inside"        ? styles.dropInside     : "",
     dragId.current === node.id ? styles.dragging       : "",
+    confirmDelete              ? styles.deleteConfirm  : "",
   ].filter(Boolean).join(" ");
+
+  // ── Delete button (shared by both folder and leaf) ────────────────────────
+  const deleteBtn = (
+    <button
+      className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ""}`}
+      title={confirmDelete ? "Click again to confirm delete" : isFolder ? "Delete folder" : "Delete bookmark"}
+      onClick={handleDelete}
+    >
+      {confirmDelete ? "?" : "✕"}
+    </button>
+  );
 
   const element = isFolder ? (
     <div
@@ -383,6 +480,8 @@ function BookmarkNode({
     >
       <span className={styles.folderIcon}>{open ? "📂" : "📁"}</span>
       <span className={styles.folderName}>{node.title || "Bookmarks"}</span>
+      <button className={styles.addFolderBtn} title="New folder" onClick={openAddFolder}>+</button>
+      {deleteBtn}
       <span className={styles.folderChevron}>▶</span>
     </div>
   ) : node.url ? (
@@ -406,6 +505,7 @@ function BookmarkNode({
     >
       <Favicon url={node.url} className={styles.favicon} />
       <span className={styles.bookmarkTitle}>{node.title || node.url}</span>
+      {deleteBtn}
     </div>
   ) : null;
 
@@ -415,6 +515,15 @@ function BookmarkNode({
     <>
       {myDrop === "before" && <div className={styles.bmPlaceholder} />}
       {element}
+      {isFolder && addingFolder && (
+        <div className={styles.newFolderInput}>
+          <span className={styles.folderIcon}>📁</span>
+          <input ref={folderInputRef} value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            onKeyDown={keyDownAddFolder} onBlur={confirmAddFolder}
+            placeholder="Folder name…" />
+        </div>
+      )}
       {myDrop === "after"  && <div className={styles.bmPlaceholder} />}
       {open && (
         <div
