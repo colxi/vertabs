@@ -1,0 +1,26 @@
+src/sidepanel/components/Config.tsx
+  s_ed21a9f9ee915e::t_ee1e36d6c651b9 279-310
+CHANGELOG.md
+  s_ed21a9f9ee915e::t_f0135e23e9f787 7-11
+src/sidepanel/components/Config.module.css
+  s_ed21a9f9ee915e::t_a6b1806f8c4a19 80,82,84,87-88
+  s_ed21a9f9ee915e::t_e0ec5a2c847e1b 83
+src/sidepanel/components/Config.spec.tsx
+  s_ed21a9f9ee915e::t_e5d1c1588d25cc 119,122,125,128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8e1c8238dfeac4e2dad0403901d96ca99290c27d",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
