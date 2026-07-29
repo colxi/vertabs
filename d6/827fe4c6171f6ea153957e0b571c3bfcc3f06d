@@ -1,0 +1,21 @@
+src/sidepanel/components/Bookmarks.tsx
+  s_ed21a9f9ee915e::t_1f61e9fd95c33d 416,418
+src/sidepanel/components/Bookmarks.module.css
+  s_ed21a9f9ee915e::t_16b5a0e50e44b9 112-122,125-127,130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d6827fe4c6171f6ea153957e0b571c3bfcc3f06d",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
