@@ -15,7 +15,7 @@ import styles from "./App.module.css";
 type SidebarState = "expanded" | "compact";
 
 export function App() {
-  const { shortcuts, add, edit, remove, reorder } = useShortcuts();
+  const { shortcuts, add, remove, reorder } = useShortcuts();
   const { tree } = useBookmarks();
   const roots = tree[0]?.children ?? [];
   const { isOpen, toggle, sync: syncFolders } = useBookmarkFolders(roots);
@@ -257,10 +257,6 @@ export function App() {
           onUpdate={updateConfig}
           onClose={() => setShowConfig(false)}
           shortcuts={shortcuts}
-          onAddShortcut={add}
-          onEditShortcut={edit}
-          onRemoveShortcut={remove}
-          onReorderShortcut={reorder}
         />
       </div>
     </div>

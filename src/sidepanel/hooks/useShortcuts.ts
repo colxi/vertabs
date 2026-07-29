@@ -84,7 +84,7 @@ export function useShortcuts() {
 
   // ── add: create a new pinned tab and store its original URL ─────────────────
   const add = useCallback(async (url: string) => {
-    const tab = await chrome.tabs.create({ url, pinned: true });
+    const tab = await chrome.tabs.create({ url, pinned: true, active: false });
     if (tab.id != null) {
       const originalUrls = await loadOriginalUrls();
       originalUrls[String(tab.id)] = url;

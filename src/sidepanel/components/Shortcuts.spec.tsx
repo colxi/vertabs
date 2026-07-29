@@ -80,11 +80,21 @@ describe("Shortcuts", () => {
     expect(onAdd).toHaveBeenCalledWith("https://enter.com");
   });
 
-  it("calls onRemove when the remove button is clicked", () => {
+  it("first remove click enters confirm state (shows ?)", () => {
     const onRemove = vi.fn();
     render(<Shortcuts {...defaultProps} onRemove={onRemove} />);
-    const removeBtns = screen.getAllByText("✕");
-    fireEvent.click(removeBtns[0]);
+    const removeBtn = screen.getAllByText("✕")[0];
+    fireEvent.click(removeBtn);
+    expect(onRemove).not.toHaveBeenCalled();
+    expect(screen.getAllByText("?")[0]).toBeInTheDocument();
+  });
+
+  it("second remove click calls onRemove", () => {
+    const onRemove = vi.fn();
+    render(<Shortcuts {...defaultProps} onRemove={onRemove} />);
+    const removeBtn = screen.getAllByText("✕")[0];
+    fireEvent.click(removeBtn); // first — confirm
+    fireEvent.click(screen.getAllByText("?")[0]); // second — confirmed
     expect(onRemove).toHaveBeenCalledWith("1");
   });
 

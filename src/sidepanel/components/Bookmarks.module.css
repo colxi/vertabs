@@ -276,9 +276,20 @@
   color: var(--text-muted);
 }
 
+/* Second line: full URL */
 .bookmarkDomain {
   font-size: 0.72rem;
   color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Third line: folder path (search results only) */
+.bookmarkPath {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  opacity: 0.7;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

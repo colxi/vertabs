@@ -1,8 +1,6 @@
 import React, { useRef, useState } from "react";
 import { SidebarConfig } from "../hooks/useConfig";
 import { Shortcut } from "../utils/shortcuts";
-import { faviconUrl } from "../utils/favicon";
-import { BookmarksManager } from "./BookmarksManager";
 import styles from "./Config.module.css";
 
 interface Props {
@@ -10,22 +8,9 @@ interface Props {
   onUpdate: (updates: Partial<SidebarConfig>) => void;
   onClose: () => void;
   shortcuts: Shortcut[];
-  onAddShortcut: (url: string) => void;
-  onEditShortcut: (id: string, name: string, url: string) => void;
-  onRemoveShortcut: (id: string) => void;
-  onReorderShortcut: (from: number, to: number) => void;
 }
 
-export function Config({
-  config,
-  onUpdate,
-  onClose,
-  shortcuts,
-  onAddShortcut,
-  onEditShortcut,
-  onRemoveShortcut,
-  onReorderShortcut,
-}: Props) {
+export function Config({ config, onUpdate, onClose, shortcuts }: Props) {
   return (
     <div className={styles.overlay}>
       <div className={styles.header}>
@@ -39,14 +24,6 @@ export function Config({
         <ModeSection config={config} onUpdate={onUpdate} />
         <AppearanceSection config={config} onUpdate={onUpdate} />
         <ContentSection config={config} onUpdate={onUpdate} />
-        <ShortcutsSection
-          shortcuts={shortcuts}
-          onAdd={onAddShortcut}
-          onEdit={onEditShortcut}
-          onRemove={onRemoveShortcut}
-          onReorder={onReorderShortcut}
-        />
-        <BookmarksSection />
         <ExportImportSection shortcuts={shortcuts} />
       </div>
     </div>
@@ -58,7 +35,7 @@ export function Config({
 function Section({
   title,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   title: string;
   children: React.ReactNode;
@@ -71,7 +48,9 @@ function Section({
         <span>{title}</span>
         <span className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}>▶</span>
       </button>
-      {open && <div className={styles.sectionBody}>{children}</div>}
+      <div className={`${styles.sectionWrap} ${open ? styles.sectionWrapOpen : ""}`}>
+        <div className={styles.sectionBody}>{children}</div>
+      </div>
     </div>
   );
 }
@@ -366,133 +345,6 @@ function ContentSection({
           className={styles.textInput}
         />
       </Row>
-    </Section>
-  );
-}
-
-// ── Shortcuts management ──────────────────────────────────────────────────────
-
-function ShortcutsSection({
-  shortcuts,
-  onAdd,
-  onEdit,
-  onRemove,
-  onReorder,
-}: {
-  shortcuts: Shortcut[];
-  onAdd: (url: string) => void;
-  onEdit: (id: string, name: string, url: string) => void;
-  onRemove: (id: string) => void;
-  onReorder: (from: number, to: number) => void;
-}) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editUrl, setEditUrl] = useState("");
-  const [addOpen, setAddOpen] = useState(false);
-  const [newUrl, setNewUrl] = useState("");
-  const dragIndex = useRef<number | null>(null);
-
-  function startEdit(sc: Shortcut) {
-    setEditingId(sc.id);
-    setEditUrl(sc.url);
-  }
-
-  function saveEdit() {
-    if (!editingId || !editUrl.trim()) return;
-    const normalized = /^https?:\/\//i.test(editUrl) ? editUrl : `https://${editUrl}`;
-    // name will be updated automatically once the tab navigates
-    const sc = shortcuts.find((s) => s.id === editingId);
-    onEdit(editingId, sc?.name ?? "", normalized);
-    setEditingId(null);
-  }
-
-  function saveAdd() {
-    if (!newUrl.trim()) return;
-    const normalized = /^https?:\/\//i.test(newUrl) ? newUrl : `https://${newUrl}`;
-    onAdd(normalized);
-    setAddOpen(false);
-    setNewUrl("");
-  }
-
-  return (
-    <Section title="Shortcuts">
-      <div className={styles.scList}>
-        {shortcuts.map((sc, i) =>
-          editingId === sc.id ? (
-            <div key={sc.id} className={styles.scEditRow}>
-              <input
-                autoFocus
-                value={editUrl}
-                onChange={(e) => setEditUrl(e.target.value)}
-                placeholder="https://…"
-                onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-              />
-              <div className={styles.scEditActions}>
-                <button className={styles.btnPrimary} onClick={saveEdit}>Save</button>
-                <button onClick={() => setEditingId(null)}>Cancel</button>
-              </div>
-            </div>
-          ) : (
-            <div
-              key={sc.id}
-              className={styles.scRow}
-              draggable
-              onDragStart={() => { dragIndex.current = i; }}
-              onDragEnter={() => {
-                if (dragIndex.current !== null && dragIndex.current !== i) {
-                  onReorder(dragIndex.current, i);
-                  dragIndex.current = i;
-                }
-              }}
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnd={() => { dragIndex.current = null; }}
-            >
-              <span className={styles.dragHandle}>⠿</span>
-              <img
-                className={styles.scFavicon}
-                src={sc.favIconUrl || faviconUrl(sc.url)}
-                alt=""
-                onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
-              />
-              <div className={styles.scInfo}>
-                <span className={styles.scName}>{sc.name}</span>
-                <span className={styles.scUrl}>{sc.url}</span>
-              </div>
-              <button className={styles.iconBtn} onClick={() => startEdit(sc)} title="Edit URL">✏</button>
-              <button className={styles.iconBtnDanger} onClick={() => onRemove(sc.id)} title="Delete">🗑</button>
-            </div>
-          )
-        )}
-      </div>
-
-      {addOpen ? (
-        <div className={styles.scEditRow}>
-          <input
-            autoFocus
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            placeholder="https://…"
-            onKeyDown={(e) => e.key === "Enter" && saveAdd()}
-          />
-          <div className={styles.scEditActions}>
-            <button className={styles.btnPrimary} onClick={saveAdd}>Add</button>
-            <button onClick={() => setAddOpen(false)}>Cancel</button>
-          </div>
-        </div>
-      ) : (
-        <button className={styles.addRowBtn} onClick={() => setAddOpen(true)}>
-          + Add shortcut
-        </button>
-      )}
-    </Section>
-  );
-}
-
-// ── Bookmarks management ──────────────────────────────────────────────────────
-
-function BookmarksSection() {
-  return (
-    <Section title="Bookmarks">
-      <BookmarksManager />
     </Section>
   );
 }
