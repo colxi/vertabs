@@ -61,18 +61,61 @@ describe("useTabs", () => {
   it("closeTab() calls chrome.tabs.remove and then refreshes", async () => {
     const tab = makeTab({ id: 5 });
     chrome.tabs.query = vi.fn((_q, cb) => cb([tab]));
-    chrome.tabs.remove = vi.fn((_id, cb) => cb?.());
+    chrome.tabs.remove = vi.fn(() => Promise.resolve());
 
     const { result } = renderHook(() => useTabs());
     await act(async () => {});
 
     act(() => { result.current.closeTab(5); });
 
-    expect(chrome.tabs.remove).toHaveBeenCalledWith(5, expect.any(Function));
+    expect(chrome.tabs.remove).toHaveBeenCalledWith(5);
   });
 
   it("removes event listeners on unmount", async () => {
     const removeSpy = vi.spyOn(chrome.tabs.onCreated, "removeListener");
+    const { unmount } = renderHook(() => useTabs());
+    await act(async () => {});
+
+    unmount();
+
+    expect(removeSpy).toHaveBeenCalled();
+  });
+
+  // ── Tab groups ──────────────────────────────────────────────────────────────
+
+  it("initialises with empty groups list", () => {
+    const { result } = renderHook(() => useTabs());
+    expect(result.current.groups).toEqual([]);
+  });
+
+  it("loads tab groups on mount via chrome.tabGroups.query", async () => {
+    const group = { id: 1, title: "Work", color: "blue", collapsed: false, windowId: 1 } as chrome.tabGroups.TabGroup;
+    chrome.tabGroups.query = vi.fn(() => Promise.resolve([group]));
+
+    const { result } = renderHook(() => useTabs());
+    await act(async () => {});
+
+    expect(result.current.groups).toHaveLength(1);
+    expect(result.current.groups[0].title).toBe("Work");
+  });
+
+  it("refreshes groups when tabGroups.onUpdated fires", async () => {
+    const group1 = { id: 1, title: "Work",    color: "blue", collapsed: false, windowId: 1 } as chrome.tabGroups.TabGroup;
+    const group2 = { id: 1, title: "Updated", color: "blue", collapsed: false, windowId: 1 } as chrome.tabGroups.TabGroup;
+    chrome.tabGroups.query = vi.fn(() => Promise.resolve([group1]));
+
+    const { result } = renderHook(() => useTabs());
+    await act(async () => {});
+
+    chrome.tabGroups.query = vi.fn(() => Promise.resolve([group2]));
+    act(() => { (chrome.tabGroups.onUpdated as any)._fire(group2); });
+    await act(async () => {});
+
+    expect(result.current.groups[0].title).toBe("Updated");
+  });
+
+  it("removes tabGroups event listeners on unmount", async () => {
+    const removeSpy = vi.spyOn(chrome.tabGroups.onCreated, "removeListener");
     const { unmount } = renderHook(() => useTabs());
     await act(async () => {});
 

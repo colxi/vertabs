@@ -3,7 +3,7 @@
   "name": "Vertabs",
   "version": "1.0.0",
   "description": "A sidebar with shortcuts, bookmarks, and open tabs.",
-  "permissions": ["tabs", "bookmarks", "storage", "sidePanel"],
+  "permissions": ["tabs", "bookmarks", "storage", "sidePanel", "tabGroups"],
   "host_permissions": ["<all_urls>"],
   "side_panel": {
     "default_path": "src/sidepanel/index.html"

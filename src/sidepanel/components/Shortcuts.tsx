@@ -5,6 +5,7 @@ import { Shortcut } from "../utils/shortcuts";
 
 const TAB_DRAG_TYPE      = "application/x-vertabs-tab";
 const SHORTCUT_DRAG_TYPE = "application/x-vertabs-shortcut";
+const BM_DRAG_TYPE       = "application/x-vertabs-bookmark";
 
 interface Props {
   shortcuts: Shortcut[];
@@ -74,6 +75,18 @@ export function Shortcuts({ shortcuts, onAdd, onRemove, onReorder }: Props) {
         if (data.url) onAdd(data.url);
       } catch { /* ignore */ }
     }
+
+    // Handle bookmark drop → create shortcut from bookmark URL
+    if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) {
+      e.preventDefault();
+      setTabDragOver(false);
+      const id = e.dataTransfer.getData(BM_DRAG_TYPE);
+      if (id) {
+        chrome.bookmarks.get(id).then(([node]) => {
+          if (node?.url) onAdd(node.url);
+        }).catch(() => {});
+      }
+    }
   }
 
   function handleGridDragEnd() {
@@ -83,7 +96,8 @@ export function Shortcuts({ shortcuts, onAdd, onRemove, onReorder }: Props) {
   }
 
   function handleGridDragOver(e: React.DragEvent) {
-    if (e.dataTransfer.types.includes(TAB_DRAG_TYPE)) {
+    if (e.dataTransfer.types.includes(TAB_DRAG_TYPE) ||
+        e.dataTransfer.types.includes(BM_DRAG_TYPE)) {
       e.preventDefault();
       setTabDragOver(true);
     }

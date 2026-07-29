@@ -37,6 +37,21 @@
 
 .searchBar { padding-bottom: 8px; }
 
+.searchBarWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 8px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  pointer-events: none;
+  line-height: 1;
+}
+
 .searchBar input {
   width: 100%;
   background: var(--surface-2);
@@ -44,7 +59,7 @@
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.88rem;
-  padding: 7px 10px;
+  padding: 7px 10px 7px 26px;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   font-family: inherit;
@@ -88,10 +103,24 @@
   color: var(--text-dim);
   font-size: 0.65rem;
   transition: transform 0.18s;
+  cursor: pointer;
 }
 .open .folderChevron { transform: rotate(90deg); }
 
-.children { padding-left: 14px; }
+/* Animated collapsible wrapper using grid-template-rows trick */
+.childrenWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.childrenOpen {
+  grid-template-rows: 1fr;
+}
+
+.children {
+  padding-left: 14px;
+  overflow: hidden;
+}
 
 /* ── Bookmark leaf ────────────────────────────────────────────────────────── */
 .bookmarkItem {
@@ -231,13 +260,28 @@
   flex-shrink: 0;
 }
 
-.bookmarkTitle {
+.bookmarkInfo {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bookmarkTitle {
   font-size: 0.88rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-muted);
+}
+
+.bookmarkDomain {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .highlight {
@@ -279,3 +323,18 @@
   transition: transform 0.18s;
 }
 .sourceTitleCollapsed .sourceChevron { transform: rotate(-90deg); }
+
+/* Inline rename input for folder double-click */
+.renameInput {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 1px 5px;
+  outline: none;
+  min-width: 0;
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}

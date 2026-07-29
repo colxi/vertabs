@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Tab groups
+
+- feat: tab groups are now displayed in the Open Tabs section with a colored vertical left border spanning the entire group block
+- feat: each group shows a header with a color dot and the group name
+- feat: group color matches the color chosen by the user in Chrome
+- chore: `tabGroups` permission added to `manifest.json`
+- fix: `chrome.tabs.remove` migrated from MV2 callback to MV3 Promise API — close button on tabs was silently doing nothing
+
+### Bookmark improvements
+
+- feat: drag a bookmark leaf onto the Shortcuts section to create a pinned tab shortcut (bookmark is preserved)
+- feat: bookmark rows now show the URL domain below the title, matching the Open Tabs row format
+- feat: bookmarks open in a new tab at position 0 (top of the tab list) instead of the end
+- fix: `Cannot find module '*.module.css'` IDE error resolved — added `src/typings.d.ts` with CSS module ambient declaration
+- fix: `Cannot find name 'chrome'` IDE error resolved — added `"types": ["chrome"]` to `tsconfig.json`
+
+### Search inputs
+
+- feat: magnifier icon (🔍) added inside the search inputs for both Bookmarks and Open Tabs sections
+
+### Tests
+
+- feat: 25 new unit tests covering tab groups, bookmark delete/rename/new-folder, source visibility, open-at-top, and close tab fix
+- chore: Chrome mock extended with `tabGroups`, `windows` APIs
+- chore: `useTabs.closeTab` test updated to match Promise-based `chrome.tabs.remove`
+
 ### Visual improvements
 
 - feat: complete visual overhaul — richer dark theme with deeper backgrounds (`#16171a`), layered surfaces, and consistent shadows throughout

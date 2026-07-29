@@ -3,12 +3,27 @@ import styles from "./Tabs.module.css";
 import { faviconUrl } from "../utils/favicon";
 
 const TAB_DRAG_TYPE = "application/x-vertabs-tab";
+const NO_GROUP = -1;
+
+// Chrome tab group colors → CSS colours
+const GROUP_COLORS: Record<string, string> = {
+  grey:   "#5f6368",
+  blue:   "#1a73e8",
+  red:    "#d93025",
+  yellow: "#f9ab00",
+  green:  "#1e8e3e",
+  pink:   "#d01884",
+  purple: "#a142f4",
+  cyan:   "#007b83",
+  orange: "#fa903e",
+};
 
 interface Props {
-  tabs: chrome.tabs.Tab[];
+  tabs:    chrome.tabs.Tab[];
+  groups:  chrome.tabGroups.TabGroup[];
   onFocus: (tabId: number) => void;
   onClose: (tabId: number) => void;
-  onMove: (tabId: number, toIndex: number) => void;
+  onMove:  (tabId: number, toIndex: number) => void;
   collapsed: boolean;
   onCollapsedChange: (v: boolean) => void;
   query: string;
@@ -21,16 +36,19 @@ function domain(url: string | undefined): string {
   catch { return ""; }
 }
 
-export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedChange, query, onQueryChange }: Props) {
+export function Tabs({ tabs, groups, onFocus, onClose, onMove, collapsed, onCollapsedChange, query, onQueryChange }: Props) {
   const q = query.trim().toLowerCase();
 
-  // dropSlot: index in visibleTabs where the placeholder appears.
-  // Inserting before item[i] = slot i. Inserting after last = slot visibleTabs.length.
   const [dropSlot, setDropSlotState] = useState<number | null>(null);
   const dropSlotRef = useRef<number | null>(null);
   function setDropSlot(v: number | null) { dropSlotRef.current = v; setDropSlotState(v); }
   const dragTabId = useRef<number | null>(null);
-  const dragIndex = useRef<number | null>(null); // index in visibleTabs
+  const dragIndex = useRef<number | null>(null);
+
+  // Build a groupId → TabGroup map for quick lookup
+  const groupMap = new Map<number, chrome.tabGroups.TabGroup>(
+    groups.map((g) => [g.id, g])
+  );
 
   const visibleTabs = tabs.filter((t) => {
     if (t.pinned) return false;
@@ -55,7 +73,6 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
   function handleDragOver(e: React.DragEvent, i: number) {
     if (!e.dataTransfer.types.includes(TAB_DRAG_TYPE)) return;
     e.preventDefault();
-    // Top half → slot before this item; bottom half → slot after
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const slot = e.clientY < rect.top + rect.height / 2 ? i : i + 1;
     setDropSlot(slot);
@@ -65,12 +82,11 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
     e.preventDefault();
     const slot = dropSlotRef.current;
     setDropSlot(null);
-    const fromId = dragTabId.current;
+    const fromId  = dragTabId.current;
     const fromIdx = dragIndex.current;
     dragTabId.current = null;
     dragIndex.current = null;
     if (fromId == null || slot == null || fromIdx == null) return;
-    // Don't move if slot is adjacent to the item (would be a no-op)
     if (slot === fromIdx || slot === fromIdx + 1) return;
     const targetIdx = slot > fromIdx ? slot - 1 : slot;
     const target = visibleTabs[targetIdx];
@@ -84,28 +100,68 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
     setDropSlot(null);
   }
 
-  // Build the rendered list interleaving placeholder at dropSlot
+  // Build rendered items — tabs in the same group share a colored left-border container
   const items: React.ReactNode[] = [];
+
+  // Bucket consecutive tabs by groupId
+  type Bucket = { gid: number; group?: chrome.tabGroups.TabGroup; tabs: { tab: chrome.tabs.Tab; i: number }[] };
+  const buckets: Bucket[] = [];
   visibleTabs.forEach((tab, i) => {
-    if (dropSlot === i) {
-      items.push(<div key="placeholder" className={styles.placeholder} />);
+    const gid   = tab.groupId ?? NO_GROUP;
+    const group = gid !== NO_GROUP ? groupMap.get(gid) : undefined;
+    const last  = buckets[buckets.length - 1];
+    if (last && last.gid === gid) {
+      last.tabs.push({ tab, i });
+    } else {
+      buckets.push({ gid, group, tabs: [{ tab, i }] });
     }
-    items.push(
-      <TabItem
-        key={tab.id}
-        tab={tab}
-        isDragging={dragTabId.current === tab.id}
-        onFocus={onFocus}
-        onClose={onClose}
-        onDragStart={(e) => handleDragStart(e, tab, i)}
-        onDragOver={(e) => handleDragOver(e, i)}
-        onDrop={handleDrop}
-        onDragEnd={handleDragEnd}
-      />
-    );
   });
+
+  buckets.forEach((bucket) => {
+    const color = bucket.group ? (GROUP_COLORS[bucket.group.color] ?? "#888") : undefined;
+
+    const tabEls: React.ReactNode[] = bucket.tabs.map(({ tab, i }) => {
+      const el = (
+        <React.Fragment key={tab.id}>
+          {dropSlot === i && <div className={styles.placeholder} />}
+          <TabItem
+            tab={tab}
+            isDragging={dragTabId.current === tab.id}
+            onFocus={onFocus}
+            onClose={onClose}
+            onDragStart={(e) => handleDragStart(e, tab, i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDrop={handleDrop}
+            onDragEnd={handleDragEnd}
+          />
+        </React.Fragment>
+      );
+      return el;
+    });
+
+    if (color) {
+      // Grouped: wrap in a container with the colored left border
+      items.push(
+        <div
+          key={`group-${bucket.gid}`}
+          className={styles.groupBlock}
+          style={{ "--group-color": color } as React.CSSProperties}
+        >
+          <div className={styles.groupHeader}>
+            <span className={styles.groupDot} style={{ background: color }} />
+            <span className={styles.groupTitle}>{bucket.group!.title || "Group"}</span>
+          </div>
+          {tabEls}
+        </div>
+      );
+    } else {
+      // Ungrouped: render tabs directly
+      items.push(...tabEls);
+    }
+  });
+
   if (dropSlot === visibleTabs.length) {
-    items.push(<div key="placeholder" className={styles.placeholder} />);
+    items.push(<div key="placeholder-end" className={styles.placeholder} />);
   }
 
   return (
@@ -122,17 +178,19 @@ export function Tabs({ tabs, onFocus, onClose, onMove, collapsed, onCollapsedCha
       {!collapsed && (
         <div className={styles.content}>
           <div className={styles.searchBar}>
-            <input
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Search tabs…"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className={styles.searchBarWrap}>
+              <span className={styles.searchIcon}>🔍</span>
+              <input
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                placeholder="Search tabs…"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
 
           <div
             onDragOver={(e) => {
-              // Handle drag-over on the container for the "after last" slot
               if (!e.dataTransfer.types.includes(TAB_DRAG_TYPE)) return;
               e.preventDefault();
             }}
@@ -173,7 +231,7 @@ function TabItem({
     <div
       className={[
         styles.tabItem,
-        tab.active ? styles.active : "",
+        tab.active ? styles.active   : "",
         isDragging ? styles.dragging : "",
       ].filter(Boolean).join(" ")}
       draggable
@@ -185,30 +243,18 @@ function TabItem({
       title={tab.url}
     >
       {showImg ? (
-        <img
-          className={styles.favicon}
-          src={favicon}
-          alt=""
-          onError={() => setImgFailed(true)}
-        />
+        <img className={styles.favicon} src={favicon} alt="" onError={() => setImgFailed(true)} />
       ) : (
         <div className={styles.faviconPlaceholder} />
       )}
       <div className={styles.tabInfo}>
-        <span className={styles.tabTitle}>
-          {tab.title || tab.url || "New Tab"}
-        </span>
-        <span className={styles.tabDomain}>
-          {domain(tab.url)}
-        </span>
+        <span className={styles.tabTitle}>{tab.title || tab.url || "New Tab"}</span>
+        <span className={styles.tabDomain}>{domain(tab.url)}</span>
       </div>
       <button
         className={styles.closeBtn}
         title="Close tab"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (tab.id != null) onClose(tab.id);
-        }}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (tab.id != null) onClose(tab.id); }}
       >
         ✕
       </button>

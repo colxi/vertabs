@@ -92,7 +92,20 @@ function makeChromeApi() {
     onMessage: makeEventTarget(),
   };
 
-  return { storage, tabs, bookmarks, runtime };
+  const tabGroups = {
+    query:     vi.fn(() => Promise.resolve([])),
+    onCreated: makeEventTarget(),
+    onUpdated: makeEventTarget(),
+    onRemoved: makeEventTarget(),
+  };
+
+  const windows = {
+    WINDOW_ID_CURRENT: -2,
+    getAll: vi.fn(() => Promise.resolve([])),
+    update: vi.fn(() => Promise.resolve({})),
+  };
+
+  return { storage, tabs, bookmarks, tabGroups, windows, runtime };
 }
 
 // Install a fresh chrome object before every test.

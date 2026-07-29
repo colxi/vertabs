@@ -22,8 +22,10 @@ const makeTab = (id: number, overrides: Partial<chrome.tabs.Tab> = {}): chrome.t
 
 const defaultProps = {
   tabs: [makeTab(1), makeTab(2)],
+  groups: [] as chrome.tabGroups.TabGroup[],
   onFocus: vi.fn(),
   onClose: vi.fn(),
+  onMove: vi.fn(),
   collapsed: false,
   onCollapsedChange: vi.fn(),
   query: "",
@@ -116,5 +118,75 @@ describe("Tabs", () => {
     const closeBtns = screen.getAllByTitle("Close tab");
     fireEvent.click(closeBtns[0]);
     expect(onClose).toHaveBeenCalledWith(1);
+  });
+
+  // ── Tab groups ─────────────────────────────────────────────────────────────
+
+  const makeGroup = (id: number, color: chrome.tabGroups.ColorEnum, title = ""): chrome.tabGroups.TabGroup => ({
+    id,
+    title,
+    color,
+    collapsed: false,
+    windowId: 1,
+  });
+
+  it("renders a group header with the group title when tabs belong to a group", () => {
+    const tabs   = [makeTab(1, { groupId: 10, title: "Tab A" })];
+    const groups = [makeGroup(10, "blue", "My Group")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} />);
+    expect(screen.getByText("My Group")).toBeInTheDocument();
+  });
+
+  it("falls back to 'Group' label when group title is empty", () => {
+    const tabs   = [makeTab(1, { groupId: 10 })];
+    const groups = [makeGroup(10, "red", "")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} />);
+    expect(screen.getByText("Group")).toBeInTheDocument();
+  });
+
+  it("does not render a group header for ungrouped tabs", () => {
+    render(<Tabs {...defaultProps} />); // defaultProps tabs have groupId: -1
+    expect(screen.queryByText("Group")).not.toBeInTheDocument();
+    expect(screen.queryByText("My Group")).not.toBeInTheDocument();
+  });
+
+  it("renders one group header per distinct group, not per tab", () => {
+    const tabs = [
+      makeTab(1, { groupId: 10, title: "Tab A" }),
+      makeTab(2, { groupId: 10, title: "Tab B" }),
+    ];
+    const groups = [makeGroup(10, "green", "Work")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} />);
+    // Only one "Work" header
+    expect(screen.getAllByText("Work")).toHaveLength(1);
+  });
+
+  it("renders separate group headers for different groups", () => {
+    const tabs = [
+      makeTab(1, { groupId: 10, title: "Tab A" }),
+      makeTab(2, { groupId: 20, title: "Tab B" }),
+    ];
+    const groups = [makeGroup(10, "blue", "Alpha"), makeGroup(20, "red", "Beta")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} />);
+    expect(screen.getByText("Alpha")).toBeInTheDocument();
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+  });
+
+  it("grouped tabs are still focusable by click", () => {
+    const onFocus = vi.fn();
+    const tabs    = [makeTab(5, { groupId: 10, title: "Grouped Tab" })];
+    const groups  = [makeGroup(10, "purple", "Dev")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} onFocus={onFocus} />);
+    fireEvent.click(screen.getByText("Grouped Tab"));
+    expect(onFocus).toHaveBeenCalledWith(5);
+  });
+
+  it("grouped tabs are still closeable", () => {
+    const onClose = vi.fn();
+    const tabs    = [makeTab(5, { groupId: 10, title: "Grouped Tab" })];
+    const groups  = [makeGroup(10, "cyan", "Dev")];
+    render(<Tabs {...defaultProps} tabs={tabs} groups={groups} onClose={onClose} />);
+    fireEvent.click(screen.getByTitle("Close tab"));
+    expect(onClose).toHaveBeenCalledWith(5);
   });
 });

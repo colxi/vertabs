@@ -19,7 +19,7 @@ export function App() {
   const { tree } = useBookmarks();
   const roots = tree[0]?.children ?? [];
   const { isOpen, toggle, sync: syncFolders } = useBookmarkFolders(roots);
-  const { tabs, focusTab, closeTab, moveTab } = useTabs();
+  const { tabs, groups, focusTab, closeTab, moveTab } = useTabs();
   const { config, update: updateConfig, loaded: configLoaded } = useConfig();
   const { ui, update: updateUI, restore: restoreUI, flushSave } = useUIState();
 
@@ -235,6 +235,7 @@ export function App() {
               {config.showTabs && (
                 <Tabs
                   tabs={tabs}
+                  groups={groups}
                   onFocus={focusTab}
                   onClose={closeTab}
                   onMove={moveTab}
