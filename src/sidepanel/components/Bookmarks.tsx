@@ -6,9 +6,6 @@ const TAB_DRAG_TYPE = "application/x-vertabs-tab";
 const BM_DRAG_TYPE  = "application/x-vertabs-bookmark";
 
 // ── Drag context ──────────────────────────────────────────────────────────────
-// dragId:      id of the node being dragged (ref — always current)
-// dropInfoRef: latest drop target (ref — always current, avoids stale closures)
-// dropInfo:    same value as ref but as state so React re-renders the placeholder
 
 type DropPosition = "before" | "after" | "inside";
 interface DropInfo { targetId: string; position: DropPosition }
@@ -83,34 +80,34 @@ function collectMatches(
   return results;
 }
 
-// ── Hit-test helper ───────────────────────────────────────────────────────────
-// Given a dragover event on a target element, return "before" (top half)
-// or "after" (bottom half).
-
-function getHalf(e: React.DragEvent): "before" | "after" {
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-  return e.clientY < rect.top + rect.height / 2 ? "before" : "after";
-}
-
 // ── Move bookmark via Chrome API ──────────────────────────────────────────────
-// Always fetches the target node fresh from Chrome so the index is never stale.
+// Chrome's bookmarks.move removes the item first, then inserts at the given
+// index. When moving forward within the same parent, subtract 1 to compensate.
+
+/** Pure index calculation — exported for testing. */
+export function calcMoveIndex(
+  _draggedIndex: number,
+  _draggedParentId: string,
+  targetIndex: number,
+  _targetParentId: string,
+  position: "before" | "after",
+): number {
+  // Chrome's bookmarks.move takes the final destination index directly.
+  // It handles removal internally — no adjustment needed.
+  return position === "before" ? targetIndex : targetIndex + 1;
+}
 
 async function moveBookmark(draggedId: string, info: DropInfo) {
   if (info.position === "inside") {
-    // Drop onto a folder — move to its end
     const children = await chrome.bookmarks.getChildren(info.targetId);
-    chrome.bookmarks.move(draggedId, {
-      parentId: info.targetId,
-      index: children.length,
-    });
+    chrome.bookmarks.move(draggedId, { parentId: info.targetId, index: children.length });
     return;
   }
 
-  // "before" or "after" — fetch the target node to get its live parentId + index
   const [target] = await chrome.bookmarks.get(info.targetId);
   if (!target) return;
-  const targetIndex = target.index ?? 0;
-  const index = info.position === "before" ? targetIndex : targetIndex + 1;
+
+  const index = calcMoveIndex(0, "", target.index ?? 0, "", info.position as "before" | "after");
   chrome.bookmarks.move(draggedId, { parentId: target.parentId, index });
 }
 
@@ -201,7 +198,20 @@ export function Bookmarks({
               />
             </div>
 
-            <div className={styles.tree}>
+            <div
+              className={styles.tree}
+              onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
+              onDrop={(e) => {
+                if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
+                e.preventDefault();
+                const info = dropInfoRef.current;
+                setDropInfo(null);
+                const id = dragId.current;
+                dragId.current = null;
+                if (!id || !info || id === info.targetId) return;
+                moveBookmark(id, info);
+              }}
+            >
               {flatResults ? (
                 flatResults.length === 0
                   ? <p className={styles.empty}>No bookmarks match "{query}"</p>
@@ -237,46 +247,6 @@ export function Bookmarks({
   );
 }
 
-// ── SiblingList — renders a flat list of nodes, injecting a placeholder ───────
-
-function SiblingList({
-  nodes, depth, isOpen, onToggle, openLinksInNewTab, onDropTabOnFolder,
-}: {
-  nodes: chrome.bookmarks.BookmarkTreeNode[];
-  depth: number;
-  isOpen: (id: string) => boolean;
-  onToggle: (id: string) => void;
-  openLinksInNewTab: boolean;
-  onDropTabOnFolder: (folderId: string, e: React.DragEvent) => void;
-}) {
-  const { dropInfo } = useDragCtx();
-  const items: React.ReactNode[] = [];
-
-  nodes.forEach((node) => {
-    // Placeholder BEFORE this node
-    if (dropInfo?.targetId === node.id && dropInfo.position === "before") {
-      items.push(<div key={`ph-before-${node.id}`} className={styles.bmPlaceholder} />);
-    }
-    items.push(
-      <BookmarkNode
-        key={node.id}
-        node={node}
-        depth={depth}
-        isOpen={isOpen}
-        onToggle={onToggle}
-        openLinksInNewTab={openLinksInNewTab}
-        onDropTabOnFolder={onDropTabOnFolder}
-      />
-    );
-    // Placeholder AFTER this node (only for last item, to allow appending)
-    if (dropInfo?.targetId === node.id && dropInfo.position === "after") {
-      items.push(<div key={`ph-after-${node.id}`} className={styles.bmPlaceholder} />);
-    }
-  });
-
-  return <>{items}</>;
-}
-
 // ── Source group ──────────────────────────────────────────────────────────────
 
 function BookmarkSource({
@@ -303,16 +273,17 @@ function BookmarkSource({
           <span className={styles.sourceChevron}>▾</span>
         </div>
       )}
-      {!collapsed && (
-        <SiblingList
-          nodes={root.children ?? []}
+      {!collapsed && (root.children ?? []).map((node) => (
+        <BookmarkNode
+          key={node.id}
+          node={node}
           depth={0}
           isOpen={isOpen}
           onToggle={onToggle}
           openLinksInNewTab={openLinksInNewTab}
           onDropTabOnFolder={onDropTabOnFolder}
         />
-      )}
+      ))}
     </div>
   );
 }
@@ -334,9 +305,7 @@ function BookmarkNode({
   const isFolder = node.children != null;
   const open = isFolder && isOpen(node.id);
 
-  const isDropInside = dropInfo?.targetId === node.id && dropInfo.position === "inside";
-
-  // ── Shared drag handlers ──────────────────────────────────────────────────
+  const myDrop = dropInfo?.targetId === node.id ? dropInfo.position : null;
 
   function handleDragStart(e: React.DragEvent) {
     dragId.current = node.id;
@@ -356,22 +325,20 @@ function BookmarkNode({
     if (!hasBm && !hasTab) return;
     e.preventDefault();
     e.stopPropagation();
-    e.dataTransfer.dropEffect = "move";
 
     if (hasBm) {
       if (isFolder) {
-        // Top 25% → before, bottom 25% → after, middle 50% → inside
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const rel = (e.clientY - rect.top) / rect.height;
         if (rel < 0.25)      setDropInfo({ targetId: node.id, position: "before" });
         else if (rel > 0.75) setDropInfo({ targetId: node.id, position: "after" });
         else                 setDropInfo({ targetId: node.id, position: "inside" });
       } else {
-        // Leaf: top half = before, bottom half = after
-        setDropInfo({ targetId: node.id, position: getHalf(e) });
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const pos  = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+        setDropInfo({ targetId: node.id, position: pos });
       }
     } else {
-      // Tab drag over folder → inside only
       if (isFolder) setDropInfo({ targetId: node.id, position: "inside" });
     }
   }
@@ -379,11 +346,9 @@ function BookmarkNode({
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     e.stopPropagation();
-    // Read from ref — always the latest value, never stale from closure
     const info = dropInfoRef.current;
     setDropInfo(null);
 
-    // Tab dropped → bookmark creation (folder "inside" only)
     if (e.dataTransfer.types.includes(TAB_DRAG_TYPE) && isFolder && info?.position === "inside") {
       onDropTabOnFolder(node.id, e);
       return;
@@ -392,26 +357,25 @@ function BookmarkNode({
     const id = dragId.current;
     dragId.current = null;
     if (!id || !info) return;
-    // Don't move onto self
     if (id === info.targetId) return;
 
     moveBookmark(id, info);
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   const children = isFolder ? (node.children ?? []) : [];
 
-  const headerClasses = [
+  const cls = [
     isFolder ? styles.folderHeader : styles.bookmarkItem,
-    open && isFolder ? styles.open : "",
-    isDropInside  ? styles.folderDropTarget : "",
-    dragId.current === node.id ? (isFolder ? "" : styles.bookmarkDragging) : "",
+    open && isFolder           ? styles.open           : "",
+    myDrop === "inside"        ? styles.dropInside     : "",
+    myDrop === "before"        ? styles.dropBefore     : "",
+    myDrop === "after"         ? styles.dropAfter      : "",
+    dragId.current === node.id ? styles.dragging       : "",
   ].filter(Boolean).join(" ");
 
   const element = isFolder ? (
     <div
-      className={headerClasses}
+      className={cls}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -426,7 +390,7 @@ function BookmarkNode({
   ) : node.url ? (
     <div
       role="button"
-      className={headerClasses}
+      className={cls}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -450,21 +414,38 @@ function BookmarkNode({
   if (!element) return null;
 
   return (
-    <div className={styles.nodeWrap}>
+    <>
       {element}
       {open && (
-        <div className={styles.children}>
-          <SiblingList
-            nodes={children}
-            depth={depth + 1}
-            isOpen={isOpen}
-            onToggle={onToggle}
-            openLinksInNewTab={openLinksInNewTab}
-            onDropTabOnFolder={onDropTabOnFolder}
-          />
+        <div
+          className={styles.children}
+          onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
+          onDrop={(e) => {
+            if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const info = dropInfoRef.current;
+            setDropInfo(null);
+            const id = dragId.current;
+            dragId.current = null;
+            if (!id || !info || id === info.targetId) return;
+            moveBookmark(id, info);
+          }}
+        >
+          {children.map((child) => (
+            <BookmarkNode
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              isOpen={isOpen}
+              onToggle={onToggle}
+              openLinksInNewTab={openLinksInNewTab}
+              onDropTabOnFolder={onDropTabOnFolder}
+            />
+          ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
 

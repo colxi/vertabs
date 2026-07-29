@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { Bookmarks } from "./Bookmarks";
+import { Bookmarks, calcMoveIndex } from "./Bookmarks";
 
 const makeNode = (
   id: string,
@@ -150,5 +150,42 @@ describe("Bookmarks", () => {
     );
     fireEvent.click(screen.getByText("Bookmarks bar"));
     expect(onSourceCollapsedChange).toHaveBeenCalledWith("1", true);
+  });
+});
+
+// ── calcMoveIndex unit tests ───────────────────────────────────────────────────
+// Chrome's bookmarks.move takes the final destination index directly —
+// no adjustment needed. "before" = targetIndex, "after" = targetIndex + 1.
+
+describe("calcMoveIndex", () => {
+  const PARENT = "p1";
+  const OTHER  = "p2";
+
+  it("before target → targetIndex", () => {
+    expect(calcMoveIndex(0, PARENT, 2, PARENT, "before")).toBe(2);
+  });
+
+  it("after target → targetIndex + 1", () => {
+    expect(calcMoveIndex(0, PARENT, 2, PARENT, "after")).toBe(3);
+  });
+
+  it("before first item → 0", () => {
+    expect(calcMoveIndex(3, PARENT, 0, PARENT, "before")).toBe(0);
+  });
+
+  it("after last item → last + 1", () => {
+    expect(calcMoveIndex(0, PARENT, 3, PARENT, "after")).toBe(4);
+  });
+
+  it("cross-parent before → targetIndex", () => {
+    expect(calcMoveIndex(0, PARENT, 1, OTHER, "before")).toBe(1);
+  });
+
+  it("cross-parent after → targetIndex + 1", () => {
+    expect(calcMoveIndex(0, PARENT, 1, OTHER, "after")).toBe(2);
+  });
+
+  it("adjacent forward after → targetIndex + 1", () => {
+    expect(calcMoveIndex(0, PARENT, 1, PARENT, "after")).toBe(2);
   });
 });

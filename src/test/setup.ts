@@ -71,11 +71,18 @@ function makeChromeApi() {
   };
 
   const bookmarks = {
-    getTree: vi.fn((cb: (tree: chrome.bookmarks.BookmarkTreeNode[]) => void) => cb([])),
-    onCreated: makeEventTarget(),
-    onRemoved: makeEventTarget(),
-    onChanged: makeEventTarget(),
-    onMoved: makeEventTarget(),
+    getTree:     vi.fn((cb: (tree: chrome.bookmarks.BookmarkTreeNode[]) => void) => cb([])),
+    get:         vi.fn((_ids: string | string[]) => Promise.resolve([])),
+    getChildren: vi.fn((_id: string) => Promise.resolve([])),
+    create:      vi.fn((_details: object) => Promise.resolve({ id: "new" } as chrome.bookmarks.BookmarkTreeNode)),
+    move:        vi.fn((_id: string, _dest: object) => Promise.resolve({} as chrome.bookmarks.BookmarkTreeNode)),
+    remove:      vi.fn((_id: string) => Promise.resolve()),
+    removeTree:  vi.fn((_id: string) => Promise.resolve()),
+    update:      vi.fn((_id: string, _changes: object) => Promise.resolve({} as chrome.bookmarks.BookmarkTreeNode)),
+    onCreated:   makeEventTarget(),
+    onRemoved:   makeEventTarget(),
+    onChanged:   makeEventTarget(),
+    onMoved:     makeEventTarget(),
   };
 
   const runtime = {
