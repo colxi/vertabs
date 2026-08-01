@@ -1,5 +1,6 @@
-type SidebarState = "expanded" | "compact";
-type Position = "left" | "right";
+import { createCommandPalette } from "./commandPalette";
+
+type SidebarState = "expanded" | "compact";type Position = "left" | "right";
 
 const STORAGE_KEY_STATE  = "sidebar-state";
 const STORAGE_KEY_PINNED = "sidebar-pinned";
@@ -224,6 +225,16 @@ function initFloatingSidebar(
     graceTimer = setTimeout(() => { inGrace = false; graceTimer = null; }, 800);
   }
 
+  function hide() {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    revealed = false;
+    container.style.transform = hideTransform();
+  }
+
+  function toggleVisibility() {
+    if (revealed) hide(); else reveal();
+  }
+
   function scheduleHide() {
     if (pinned || !revealed) return;
     if (hideTimer) clearTimeout(hideTimer);
@@ -324,8 +335,7 @@ function initFloatingSidebar(
   chrome.runtime.onMessage.addListener((msg) => {
     if (!isContextValid()) return;
     if (msg.type === "toggle-sidebar") {
-      if (revealed) scheduleHide();
-      else reveal();
+      toggleVisibility();
     } else if (msg.type === "zoom-change") {
       applyZoom(msg.zoomFactor as number);
     }
@@ -366,5 +376,14 @@ function initFloatingSidebar(
       },
       "*"
     );
+  });
+
+  // ── Cmd+K / Ctrl+K → open CommandPalette ─────────────────────────────────────────
+  const commandPalette = createCommandPalette();
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      commandPalette.toggle();
+    }
   });
 }

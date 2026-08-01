@@ -93,6 +93,10 @@ export function App() {
       if (e.data?.type === "mode-changed") {
         // Content script detected a mode change — nothing to do in React.
       }
+
+      if (e.data?.type === "open-settings") {
+        setShowConfig(true);
+      }
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);

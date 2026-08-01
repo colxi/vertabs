@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Command Palette (`Cmd+K` / `Ctrl+K`)
+
+- feat: **Command Palette** — a full-page overlay triggered with `Cmd+K` (Mac) / `Ctrl+K` (Windows/Linux), rendered directly in the host page DOM by the content script (works in both floating and panel sidebar modes)
+- feat: searches across **open tabs**, **shortcuts**, and **bookmarks** simultaneously with live filtering and match highlighting
+- feat: **16 built-in commands** for the current tab: New tab, Close tab, Duplicate tab, Add to Shortcuts, Add to Bookmarks, Mute/Unmute, Zoom in/out/reset, Go back/forward, Next/Previous tab, Reopen closed tab, Copy page URL, Open Settings
+- feat: keyboard navigation — `↑`/`↓` to move, `Enter` to activate, `Escape` to close
+- feat: pressing `Enter` with no item selected performs a Google search for the typed query
+- feat: matched substrings highlighted in results (title and subtitle)
+- feat: no item pre-selected on open — selection only starts when using arrow keys
+- feat: `overscroll-behavior: contain` on results list prevents scrolling the underlying page
+- feat: `document.body.overflow = hidden` while palette is open to prevent any page scroll
+- fix: copy URL uses `execCommand` instead of `navigator.clipboard` to avoid OS permission prompt
+- fix: arrow key navigation no longer resets to first item — removed `keyup` fallback that was calling `updateResults` on every key including arrows
+- chore: all internal IDs, CSS classes, and function names use `commandPalette` / `__vcp-` prefix (no external brand references)
+
+### Sidebar keyboard shortcut
+
+- feat: **`Cmd+E`** (Mac) / `Ctrl+E` (Windows) toggles the sidebar — registered via `chrome.commands` in manifest so Chrome routes it before native shortcuts
+- fix: sidebar toggle now works correctly when pinned — new `hide()` function bypasses the `pinned` guard; `toggleVisibility()` always hides/shows regardless of pin state
+
+### Permissions
+
+- chore: `sessions` permission added to manifest (used by "Reopen closed tab" command)
+
 ### Settings panel
 
 - refactor: Shortcuts block removed from Settings — managed directly from the main panel

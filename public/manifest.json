@@ -3,8 +3,17 @@
   "name": "Vertabs",
   "version": "1.0.0",
   "description": "A sidebar with shortcuts, bookmarks, and open tabs.",
-  "permissions": ["tabs", "bookmarks", "storage", "sidePanel", "tabGroups"],
+  "permissions": ["tabs", "bookmarks", "storage", "sidePanel", "tabGroups", "sessions"],
   "host_permissions": ["<all_urls>"],
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+E",
+        "mac": "Command+E"
+      },
+      "description": "Toggle the Vertabs sidebar"
+    }
+  },
   "side_panel": {
     "default_path": "src/sidepanel/index.html"
   },
