@@ -9,7 +9,7 @@ describe("useConfig", () => {
   });
 
   it("merges persisted config from storage on mount", async () => {
-    chrome.storage.local.get = vi.fn((_keys, cb) =>
+    chrome.storage.sync.get = vi.fn((_keys, cb) =>
       cb({ "sidebar-config": { fontSize: 16, accentColor: "#ff0000" } })
     );
 
@@ -25,7 +25,7 @@ describe("useConfig", () => {
   });
 
   it("sets loaded=true even when storage has no saved config", async () => {
-    chrome.storage.local.get = vi.fn((_keys, cb) => cb({}));
+    chrome.storage.sync.get = vi.fn((_keys, cb) => cb({}));
 
     const { result } = renderHook(() => useConfig());
     await act(async () => {});
@@ -48,7 +48,7 @@ describe("useConfig", () => {
   });
 
   it("update() persists to chrome.storage.local", async () => {
-    const setSpy = vi.spyOn(chrome.storage.local, "set");
+    const setSpy = vi.spyOn(chrome.storage.sync, "set");
     const { result } = renderHook(() => useConfig());
     await act(async () => {});
 

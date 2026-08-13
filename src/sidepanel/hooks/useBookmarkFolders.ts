@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { storageGet, storageSet } from "../../storage";
 
 const STORAGE_KEY = "sidebar-bookmarks-open";
 
@@ -15,7 +16,7 @@ export function useBookmarkFolders(
   // Load from storage once roots are available.
   useEffect(() => {
     if (loaded || roots.length === 0) return;
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
+    storageGet(STORAGE_KEY, (result) => {
       if (result[STORAGE_KEY]) {
         setOpenIds(new Set(result[STORAGE_KEY] as string[]));
       } else {
@@ -33,7 +34,7 @@ export function useBookmarkFolders(
   // Persist whenever openIds changes (after initial load).
   useEffect(() => {
     if (!loaded) return;
-    chrome.storage.local.set({ [STORAGE_KEY]: [...openIds] });
+    storageSet({ [STORAGE_KEY]: [...openIds] });
   }, [openIds, loaded]);
 
   const isOpen = useCallback(
@@ -52,7 +53,7 @@ export function useBookmarkFolders(
 
   /** Called on sidebar-sync: replace open set from storage. */
   const sync = useCallback(() => {
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
+    storageGet(STORAGE_KEY, (result) => {
       if (result[STORAGE_KEY]) {
         setOpenIds(new Set(result[STORAGE_KEY] as string[]));
       }

@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import styles from "./Shortcuts.module.css";
 import { faviconUrl } from "../utils/favicon";
 import { Shortcut } from "../utils/shortcuts";
+import { storageGet, storageSet } from "../../storage";
 
 const TAB_DRAG_TYPE      = "application/x-vertabs-tab";
 const SHORTCUT_DRAG_TYPE = "application/x-vertabs-shortcut";
@@ -236,7 +237,7 @@ function ShortcutItem({
       onDragEnd={onDragEnd}
       onClick={() => {
         if (!didDrag.current) {
-          chrome.storage.local.get("sidebar-shortcut-urls", (result) => {
+          storageGet("sidebar-shortcut-urls", (result) => {
             const originalUrls = (result["sidebar-shortcut-urls"] as Record<string, string>) ?? {};
             let url = originalUrls[shortcut.id];
             if (!url) {
@@ -245,7 +246,7 @@ function ShortcutItem({
               // tab hasn't been navigated yet, or shortcut.url from the hook).
               url = shortcut.url;
               originalUrls[shortcut.id] = url;
-              chrome.storage.local.set({ "sidebar-shortcut-urls": originalUrls });
+              storageSet({ "sidebar-shortcut-urls": originalUrls });
             }
             chrome.tabs.update(Number(shortcut.id), { active: true, url });
           });

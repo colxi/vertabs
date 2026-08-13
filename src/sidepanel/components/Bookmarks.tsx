@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useRef, useState, useEffect } from "react";
+import Fuse from "fuse.js";
 import styles from "./Bookmarks.module.css";
 import { faviconUrl } from "../utils/favicon";
 
@@ -69,21 +70,39 @@ interface SearchResult {
   path: string[]; // folder names from root to parent
 }
 
-function collectMatches(
+/** Collect all leaf bookmarks with their folder path. */
+function collectAll(
   nodes: chrome.bookmarks.BookmarkTreeNode[],
-  query: string,
   path: string[] = [],
 ): SearchResult[] {
   const results: SearchResult[] = [];
   for (const node of nodes) {
     if (node.url) {
-      if (node.title.toLowerCase().includes(query) || node.url.toLowerCase().includes(query))
-        results.push({ node, path });
+      results.push({ node, path });
     } else if (node.children) {
-      results.push(...collectMatches(node.children, query, [...path, node.title]));
+      results.push(...collectAll(node.children, [...path, node.title]));
     }
   }
   return results;
+}
+
+/** Fuzzy-search bookmarks using Fuse.js, sorted by relevance score. */
+function collectMatches(
+  nodes: chrome.bookmarks.BookmarkTreeNode[],
+  query: string,
+): SearchResult[] {
+  const all = collectAll(nodes);
+  const fuse = new Fuse(all, {
+    keys: [
+      { name: "node.title", weight: 0.7 },
+      { name: "node.url",   weight: 0.3 },
+    ],
+    threshold: 0.4,       // 0 = exact, 1 = match anything
+    distance: 200,
+    includeScore: true,
+    useExtendedSearch: false,
+  });
+  return fuse.search(query).map((r) => r.item);
 }
 
 // ── Move bookmark via Chrome API ──────────────────────────────────────────────
@@ -149,6 +168,30 @@ export function Bookmarks({
   const dropInfoRef = useRef<DropInfo | null>(null);
   const [dropInfo, setDropInfoState] = useState<DropInfo | null>(null);
 
+  // ── Top-level new folder state ────────────────────────────────────────────
+  const [topAddingFolder, setTopAddingFolder] = useState(false);
+  const [topFolderName, setTopFolderName]     = useState("");
+  const topFolderInputRef = useRef<HTMLInputElement>(null);
+
+  function openTopAddFolder(e: React.MouseEvent) {
+    e.stopPropagation();
+    setTopAddingFolder(true);
+    setTopFolderName("");
+    setTimeout(() => topFolderInputRef.current?.focus(), 0);
+  }
+  function confirmTopAddFolder() {
+    const title = topFolderName.trim();
+    // Create in the first visible root
+    const targetRoot = roots[0];
+    if (title && targetRoot) chrome.bookmarks.create({ parentId: targetRoot.id, title, index: 0 });
+    setTopAddingFolder(false);
+    setTopFolderName("");
+  }
+  function keyDownTopAddFolder(e: React.KeyboardEvent) {
+    if (e.key === "Enter")  { e.preventDefault(); confirmTopAddFolder(); }
+    if (e.key === "Escape") { e.stopPropagation(); setTopAddingFolder(false); }
+  }
+
   function setDropInfo(info: DropInfo | null) {
     dropInfoRef.current = info;
     setDropInfoState(info);
@@ -172,13 +215,32 @@ export function Bookmarks({
     });
   }
 
-  function handleDropTabOnFolder(folderId: string, e: React.DragEvent) {
+  async function handleDropTabOnFolder(folderId: string, e: React.DragEvent) {
     e.preventDefault();
     const raw = e.dataTransfer.getData(TAB_DRAG_TYPE);
+    const info = dropInfoRef.current;
+    setDropInfo(null); // clear placeholder immediately
     if (!raw) return;
     try {
       const data = JSON.parse(raw) as { url: string; title: string };
-      if (data.url) chrome.bookmarks.create({ parentId: folderId, title: data.title || data.url, url: data.url });
+      if (!data.url) return;
+
+      let index: number | undefined;
+
+      if (info && info.position !== "inside") {
+        // Resolve the target child's current index from Chrome to get exact position
+        const [target] = await chrome.bookmarks.get(info.targetId);
+        if (target && target.parentId === folderId) {
+          index = info.position === "before" ? target.index : (target.index ?? 0) + 1;
+        }
+      }
+
+      chrome.bookmarks.create({
+        parentId: folderId,
+        title: data.title || data.url,
+        url: data.url,
+        ...(index !== undefined ? { index } : {}),
+      });
     } catch { /* ignore */ }
   }
 
@@ -207,9 +269,35 @@ export function Bookmarks({
               </div>
             </div>
 
+            {/* New folder button under search */}
+            {!flatResults && (
+              topAddingFolder ? (
+                <div className={styles.newFolderInput}>
+                  <span className={styles.folderIcon}>📁</span>
+                  <input
+                    ref={topFolderInputRef}
+                    value={topFolderName}
+                    onChange={(e) => setTopFolderName(e.target.value)}
+                    onKeyDown={keyDownTopAddFolder}
+                    onBlur={confirmTopAddFolder}
+                    placeholder="Folder name…"
+                  />
+                </div>
+              ) : (
+                <button className={styles.newFolderBtn} onClick={openTopAddFolder}>
+                  + New folder
+                </button>
+              )
+            )}
+
             <div
               className={styles.tree}
-              onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
+              onDragOver={(e) => {
+                if (e.dataTransfer.types.includes(BM_DRAG_TYPE) ||
+                    e.dataTransfer.types.includes(TAB_DRAG_TYPE)) {
+                  e.preventDefault();
+                }
+              }}
               onDrop={(e) => {
                 if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
                 e.preventDefault();
@@ -357,7 +445,7 @@ function BookmarkSource({
   }
   function confirmAddFolder() {
     const title = folderName.trim();
-    if (title) chrome.bookmarks.create({ parentId: root.id, title });
+    if (title) chrome.bookmarks.create({ parentId: root.id, title, index: 0 });
     setAddingFolder(false);
     setFolderName("");
   }
@@ -388,7 +476,11 @@ function BookmarkSource({
         </div>
       )}
       {!collapsed && (
-        (root.children ?? []).map((node) => (
+        [...(root.children ?? [])].sort((a, b) => {
+          const aF = a.children != null ? 0 : 1;
+          const bF = b.children != null ? 0 : 1;
+          return aF - bF;
+        }).map((node) => (
           <BookmarkNode
             key={node.id}
             node={node}
@@ -427,6 +519,8 @@ function BookmarkNode({
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState("");
   const renameRef = useRef<HTMLInputElement>(null);
+  // Used for both folder double-click and bookmark single/double-click delay
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function startRename(e: React.MouseEvent) {
     e.stopPropagation();
@@ -449,6 +543,34 @@ function BookmarkNode({
     if (e.key === "Escape") { e.stopPropagation(); setRenaming(false); }
   }
 
+  // ── Bookmark leaf click: delay to distinguish single vs double click ───────
+  function handleLeafClick(url: string) {
+    if (clickTimer.current) {
+      // Second click within 250ms → double click → rename
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+      setRenameVal(node.title || url);
+      setRenaming(true);
+      setTimeout(() => { renameRef.current?.focus(); renameRef.current?.select(); }, 0);
+      return;
+    }
+    // First click — wait 250ms for potential second click
+    clickTimer.current = setTimeout(() => {
+      clickTimer.current = null;
+      // Single click confirmed → open link
+      chrome.tabs.query({ currentWindow: true }, (tabs) => {
+        const existing = tabs.find((t) => t.url === url);
+        if (existing?.id != null) { chrome.tabs.update(existing.id, { active: true }); return; }
+        if (openLinksInNewTab) { chrome.tabs.create({ url, index: 0 }); }
+        else { const a = tabs.find((t) => t.active); if (a?.id != null) chrome.tabs.update(a.id, { url }); }
+      });
+    }, 250);
+  }
+
+  useEffect(() => () => {
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+  }, []);
+
   // ── New subfolder state ───────────────────────────────────────────────────
   const [addingFolder, setAddingFolder] = useState(false);
   const [folderName, setFolderName]     = useState("");
@@ -462,7 +584,7 @@ function BookmarkNode({
   }
   function confirmAddFolder() {
     const title = folderName.trim();
-    if (title) chrome.bookmarks.create({ parentId: node.id, title });
+    if (title) chrome.bookmarks.create({ parentId: node.id, title, index: 0 });
     setAddingFolder(false);
     setFolderName("");
   }
@@ -516,9 +638,9 @@ function BookmarkNode({
     const hasTab = e.dataTransfer.types.includes(TAB_DRAG_TYPE);
     if (!hasBm && !hasTab) return;
     e.preventDefault();
-    e.stopPropagation();
 
     if (hasBm) {
+      e.stopPropagation(); // only stop propagation for bookmark drags
       if (isFolder) {
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const rel = (e.clientY - rect.top) / rect.height;
@@ -531,20 +653,38 @@ function BookmarkNode({
         setDropInfo({ targetId: node.id, position: pos });
       }
     } else {
-      if (isFolder) setDropInfo({ targetId: node.id, position: "inside" });
+      // Tab drag: set dropInfo only on folders, let it bubble for leaf nodes
+      // so the parent .children container can set it with the folder ID
+      if (isFolder) {
+        e.stopPropagation();
+        setDropInfo({ targetId: node.id, position: "inside" });
+      }
+      // Leaf nodes: don't stopPropagation — let it bubble to .children container
     }
   }
 
   function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    const info = dropInfoRef.current;
-    setDropInfo(null);
-
-    if (e.dataTransfer.types.includes(TAB_DRAG_TYPE) && isFolder && info?.position === "inside") {
+    // Tab on folder header → create bookmark here (setDropInfo cleared inside)
+    if (e.dataTransfer.types.includes(TAB_DRAG_TYPE) && isFolder) {
+      e.preventDefault();
+      e.stopPropagation();
       onDropTabOnFolder(node.id, e);
       return;
     }
+
+    // Tab on a leaf node → do NOT stopPropagation so it bubbles to
+    // the parent .children container which handles it with the folder ID
+    if (e.dataTransfer.types.includes(TAB_DRAG_TYPE) && !isFolder) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const info = dropInfoRef.current;
+    setDropInfo(null);
+
+    if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
 
     const id = dragId.current;
     dragId.current = null;
@@ -554,7 +694,14 @@ function BookmarkNode({
     moveBookmark(id, info);
   }
 
-  const children = isFolder ? (node.children ?? []) : [];
+  // Folders always before bookmarks in the display order
+  const children = isFolder
+    ? [...(node.children ?? [])].sort((a, b) => {
+        const aIsFolder = a.children != null ? 0 : 1;
+        const bIsFolder = b.children != null ? 0 : 1;
+        return aIsFolder - bIsFolder;
+      })
+    : [];
 
   const cls = [
     isFolder ? styles.folderHeader : styles.bookmarkItem,
@@ -593,6 +740,7 @@ function BookmarkNode({
       <div
         className={cls}
         draggable
+        data-nodeid={node.id}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
@@ -608,31 +756,40 @@ function BookmarkNode({
       </div>
     )
   ) : node.url ? (
-    <div
-      role="button"
-      className={cls}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={() => {
-        const url = node.url!;
-        chrome.tabs.query({ currentWindow: true }, (tabs) => {
-          const existing = tabs.find((t) => t.url === url);
-          if (existing?.id != null) { chrome.tabs.update(existing.id, { active: true }); return; }
-          if (openLinksInNewTab) { chrome.tabs.create({ url, index: 0 }); }
-          else { const a = tabs.find((t) => t.active); if (a?.id != null) chrome.tabs.update(a.id, { url }); }
-        });
-      }}
-    >
-      <Favicon url={node.url} className={styles.favicon} />
-      <div className={styles.bookmarkInfo}>
-        <span className={styles.bookmarkTitle}>{node.title || node.url}</span>
-        <span className={styles.bookmarkDomain}>{(() => { try { return new URL(node.url).hostname.replace(/^www\./, ""); } catch { return ""; } })()}</span>
+    renaming ? (
+      <div className={cls}>
+        <Favicon url={node.url} className={styles.favicon} />
+        <input
+          ref={renameRef}
+          className={styles.renameInput}
+          value={renameVal}
+          onChange={(e) => setRenameVal(e.target.value)}
+          onKeyDown={keyDownRename}
+          onBlur={confirmRename}
+          onClick={(e) => e.stopPropagation()}
+        />
+        {deleteBtn}
       </div>
-      {deleteBtn}
-    </div>
+    ) : (
+      <div
+        role="button"
+        className={cls}
+        draggable
+        data-nodeid={node.id}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => handleLeafClick(node.url!)}
+      >
+        <Favicon url={node.url} className={styles.favicon} />
+        <div className={styles.bookmarkInfo}>
+          <span className={styles.bookmarkTitle}>{node.title || node.url}</span>
+          <span className={styles.bookmarkDomain}>{(() => { try { return new URL(node.url).hostname.replace(/^www\./, ""); } catch { return ""; } })()}</span>
+        </div>
+        {deleteBtn}
+      </div>
+    )
   ) : null;
 
   if (!element) return null;
@@ -655,8 +812,60 @@ function BookmarkNode({
         <div className={`${styles.childrenWrap} ${open ? styles.childrenOpen : ""}`}>
           <div
             className={styles.children}
-            onDragOver={(e) => { if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) e.preventDefault(); }}
+            onDragOver={(e) => {
+              if (e.dataTransfer.types.includes(BM_DRAG_TYPE)) {
+                e.preventDefault();
+              } else if (e.dataTransfer.types.includes(TAB_DRAG_TYPE)) {
+                e.preventDefault();
+                // Find which child node the cursor is nearest to and set
+                // "before"/"after" on it so the placeholder follows the cursor
+                const container = e.currentTarget as HTMLElement;
+                const childEls = Array.from(
+                  container.querySelectorAll(":scope > [draggable]")
+                ) as HTMLElement[];
+
+                if (childEls.length === 0) {
+                  // Empty folder — show "inside"
+                  setDropInfo({ targetId: node.id, position: "inside" });
+                  return;
+                }
+
+                let nearest: { id: string; position: "before" | "after" } | null = null;
+                let minDist = Infinity;
+
+                childEls.forEach((el) => {
+                  const id = el.getAttribute("data-nodeid");
+                  if (!id) return;
+                  const rect = el.getBoundingClientRect();
+                  const mid  = rect.top + rect.height / 2;
+                  const dist = Math.abs(e.clientY - mid);
+                  if (dist < minDist) {
+                    minDist   = dist;
+                    nearest   = { id, position: e.clientY < mid ? "before" : "after" };
+                  }
+                });
+
+                if (nearest) {
+                  setDropInfo({ targetId: (nearest as { id: string; position: "before" | "after" }).id, position: (nearest as { id: string; position: "before" | "after" }).position });
+                } else {
+                  setDropInfo({ targetId: node.id, position: "inside" });
+                }
+              }
+            }}
+            onDragLeave={(e) => {
+              // Clear only when leaving the children area entirely
+              if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
+                setDropInfo(null);
+              }
+            }}
             onDrop={(e) => {
+              // Tab dropped onto open folder children area → create bookmark
+              if (e.dataTransfer.types.includes(TAB_DRAG_TYPE)) {
+                e.preventDefault();
+                e.stopPropagation();
+                onDropTabOnFolder(node.id, e);
+                return;
+              }
               if (!e.dataTransfer.types.includes(BM_DRAG_TYPE)) return;
               e.preventDefault();
               e.stopPropagation();

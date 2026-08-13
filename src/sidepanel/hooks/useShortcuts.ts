@@ -1,19 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { Shortcut } from "../utils/shortcuts";
+import { storageGet, storageSet } from "../../storage";
 
 const STORAGE_KEY = "sidebar-shortcut-urls";
 
 // Read the pinned-tab-id → original-url map from storage.
 async function loadOriginalUrls(): Promise<Record<string, string>> {
   return new Promise((resolve) => {
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
+    storageGet(STORAGE_KEY, (result) => {
       resolve((result[STORAGE_KEY] as Record<string, string>) ?? {});
     });
   });
 }
 
 async function saveOriginalUrls(map: Record<string, string>) {
-  await chrome.storage.local.set({ [STORAGE_KEY]: map });
+  await storageSet({ [STORAGE_KEY]: map });
 }
 
 function tabToShortcut(tab: chrome.tabs.Tab, originalUrl?: string): Shortcut {

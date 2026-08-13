@@ -41,12 +41,19 @@
 .body {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 24px;
+  padding: 12px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* ── Section accordion ─────────────────────────────────────────────── */
 .section {
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionHeader {
@@ -54,10 +61,10 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 11px 14px;
-  background: var(--bg-elevated);
+  padding: 10px 12px;
+  background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -66,7 +73,7 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 .sectionHeader:hover {
-  background: var(--surface);
+  background: var(--surface-hover);
   color: var(--text);
 }
 
@@ -84,16 +91,16 @@
   transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .sectionWrapOpen {
-  max-height: 1200px; /* large enough for any section content */
+  max-height: 1200px;
   transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sectionBody {
-  padding: 12px 14px 14px;
+  padding: 8px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--bg);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* ── Row / Label / Control ─────────────────────────────────────────── */
@@ -165,6 +172,39 @@
   font-family: monospace;
 }
 
+/* ── Theme select ──────────────────────────────────────────────────── */
+.select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.select:hover { border-color: var(--text-dim); }
+.select:focus { border-color: var(--accent); }
+
+/* ── Custom theme swatches ─────────────────────────────────────────── */
+.customTheme {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 4px;
+  border-left: 2px solid var(--border);
+  margin: 2px 0 4px;
+}
+.customThemeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: default;
+}
+
 /* ── Toggle switch ─────────────────────────────────────────────────── */
 .toggle {
   position: relative;
@@ -178,6 +218,11 @@
   flex-shrink: 0;
 }
 .toggleOn { background: var(--accent); }
+
+.toggleDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .toggleThumb {
   position: absolute;
@@ -438,6 +483,26 @@ select:focus { border-color: var(--accent); }
 .checkRow input[type="checkbox"] {
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+/* Keyboard shortcut display */
+.kbdShortcut {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 2px 8px;
+  font-family: monospace;
+}
+
+/* Coming soon label */
+.comingSoon {
+  margin: 4px 0 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
 }
 
 /* ── Export / Import ───────────────────────────────────────────────── */

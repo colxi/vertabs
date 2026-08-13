@@ -23,9 +23,9 @@ function makeEventTarget() {
 function makeChromeApi() {
   const storageData: Record<string, unknown> = {};
 
-  const storage = {
-    local: {
-      /** Supports both callback and (implicitly) the storage state map. */
+  // Both local and sync share the same backing store in tests.
+  function makeStorageArea() {
+    return {
       get: vi.fn((keys: string | string[], cb: (r: Record<string, unknown>) => void) => {
         const keyArr = Array.isArray(keys) ? keys : [keys];
         const result: Record<string, unknown> = {};
@@ -38,9 +38,12 @@ function makeChromeApi() {
         Object.assign(storageData, items);
         cb?.();
       }),
-      /** Helper used by tests to pre-seed storage. */
-      _data: storageData,
-    },
+    };
+  }
+
+  const storage = {
+    local: { ...makeStorageArea(), _data: storageData },
+    sync:  makeStorageArea(),
   };
 
   /**
@@ -105,7 +108,15 @@ function makeChromeApi() {
     update: vi.fn(() => Promise.resolve({})),
   };
 
-  return { storage, tabs, bookmarks, tabGroups, windows, runtime };
+  const commands = {
+    getAll: vi.fn((cb?: (commands: chrome.commands.Command[]) => void) => {
+      cb?.([]);
+      return Promise.resolve([]);
+    }),
+    onCommand: makeEventTarget(),
+  };
+
+  return { storage, tabs, bookmarks, tabGroups, windows, commands, runtime };
 }
 
 // Install a fresh chrome object before every test.

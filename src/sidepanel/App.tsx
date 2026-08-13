@@ -41,9 +41,16 @@ export function App() {
     const root = document.documentElement;
     root.style.setProperty("--font-size-base", `${config.fontSize}px`);
     root.style.setProperty("--item-spacing",   `${config.itemSpacing}px`);
-    root.style.setProperty("--accent",       config.accentColor);
-    root.style.setProperty("--accent-hover", config.accentColor + "dd");
-  }, [config.fontSize, config.accentColor, config.itemSpacing, configLoaded]);
+    root.style.setProperty("--accent",         config.accentColor);
+    root.style.setProperty("--accent-hover",   config.accentColor + "dd");
+    root.style.setProperty("--bg",             config.bgColor);
+    root.style.setProperty("--surface",        config.surfaceColor);
+    root.style.setProperty("--text",           config.textColor);
+  }, [
+    config.fontSize, config.accentColor, config.itemSpacing,
+    config.bgColor, config.surfaceColor, config.textColor,
+    configLoaded,
+  ]);
 
   // ── Notify content script of state / pin changes ─────────────────────────
   useEffect(() => {

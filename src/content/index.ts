@@ -1,6 +1,7 @@
-import { createCommandPalette } from "./commandPalette";
+import { createCommandPaletteIframe } from "./commandPaletteIframe";
 
-type SidebarState = "expanded" | "compact";type Position = "left" | "right";
+type SidebarState = "expanded" | "compact";
+type Position = "left" | "right";
 
 const STORAGE_KEY_STATE  = "sidebar-state";
 const STORAGE_KEY_PINNED = "sidebar-pinned";
@@ -15,7 +16,7 @@ function isContextValid(): boolean {
 
 const EDGE_TRIGGER = 8; // px from edge that triggers reveal
 
-chrome.storage.local.get(
+chrome.storage.sync.get(
   [STORAGE_KEY_STATE, STORAGE_KEY_PINNED, STORAGE_KEY_CONFIG, STORAGE_KEY_UI],
   (result) => {
     const cfg = (result[STORAGE_KEY_CONFIG] as Record<string, unknown>) ?? {};
@@ -35,6 +36,7 @@ chrome.storage.local.get(
       (cfg.position  as Position) ?? "left",
       (cfg.sidebarWidth  as number) ?? 340,
       (cfg.autoHideDelay as number) ?? 400,
+      (cfg.enableCommandPalette as boolean) ?? true,
     );
   }
 );
@@ -48,11 +50,13 @@ function initFloatingSidebar(
   initPosition: Position,
   initWidth: number,
   initDelay: number,
+  initPaletteEnabled: boolean,
 ) {
   // ── Mutable config ──────────────────────────────────────────────────────────
   let position: Position = initPosition;
   let expandedWidth      = initWidth;
   let hideDelay          = initDelay;
+  let paletteEnabled     = initPaletteEnabled;
 
   const COMPACT_WIDTH = 56;
 
@@ -197,9 +201,9 @@ function initFloatingSidebar(
         "width 0.22s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1)";
       // Persist new width.
       if (isContextValid()) {
-        chrome.storage.local.get("sidebar-config", (result) => {
+        chrome.storage.sync.get("sidebar-config", (result) => {
           const cfg = (result["sidebar-config"] as Record<string, unknown>) ?? {};
-          chrome.storage.local.set({ "sidebar-config": { ...cfg, sidebarWidth: expandedWidth } });
+          chrome.storage.sync.set({ "sidebar-config": { ...cfg, sidebarWidth: expandedWidth } });
         });
       }
     }
@@ -256,7 +260,7 @@ function initFloatingSidebar(
     container.style.width = `${currentWidth()}px`;
     if (shouldReveal) reveal();
     if (!isContextValid()) return;
-    chrome.storage.local.set({ [STORAGE_KEY_STATE]: state });
+    chrome.storage.sync.set({ [STORAGE_KEY_STATE]: state });
   }
 
   function applyPin(isPinned: boolean) {
@@ -264,7 +268,7 @@ function initFloatingSidebar(
     if (pinned) { cancelHide(); reveal(); }
     else if (!inGrace) { scheduleHide(); }
     if (!isContextValid()) return;
-    chrome.storage.local.set({ [STORAGE_KEY_PINNED]: isPinned });
+    chrome.storage.sync.set({ [STORAGE_KEY_PINNED]: isPinned });
   }
 
   // ── Mouse / edge detection ──────────────────────────────────────────────────
@@ -321,6 +325,9 @@ function initFloatingSidebar(
         if (typeof c.autoHideDelay === "number") {
           hideDelay = c.autoHideDelay;
         }
+        if (typeof c.enableCommandPalette === "boolean") {
+          paletteEnabled = c.enableCommandPalette;
+        }
         // Mode change: requires page reload — show a notice via the iframe.
         if (c.mode && c.mode !== "floating") {
           iframe.contentWindow?.postMessage({ type: "mode-changed", mode: c.mode }, "*");
@@ -336,6 +343,8 @@ function initFloatingSidebar(
     if (!isContextValid()) return;
     if (msg.type === "toggle-sidebar") {
       toggleVisibility();
+    } else if (msg.type === "toggle-command-palette") {
+      if (paletteEnabled) commandPalette.toggle();
     } else if (msg.type === "zoom-change") {
       applyZoom(msg.zoomFactor as number);
     }
@@ -346,7 +355,7 @@ function initFloatingSidebar(
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
     if (!isContextValid()) return;
-    chrome.storage.local.get(
+    chrome.storage.sync.get(
       [STORAGE_KEY_STATE, STORAGE_KEY_PINNED, STORAGE_KEY_UI],
       (result) => {
         const s  = (result[STORAGE_KEY_STATE]  as SidebarState) ?? sidebarState;
@@ -378,12 +387,12 @@ function initFloatingSidebar(
     );
   });
 
-  // ── Cmd+K / Ctrl+K → open CommandPalette ─────────────────────────────────────────
-  const commandPalette = createCommandPalette();
+  // ── Shift+Cmd+K / Shift+Ctrl+K → open Command Palette ───────────────────────
+  const commandPalette = createCommandPaletteIframe();
   document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "K") {
       e.preventDefault();
-      commandPalette.toggle();
+      if (paletteEnabled) commandPalette.toggle();
     }
   });
 }

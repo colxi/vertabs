@@ -147,7 +147,7 @@
 
 /* Ghost placeholder row — displaces siblings during drag */
 .placeholder {
-  height: 32px;
+  height: 44px;
   margin: 2px 6px;
   border-radius: var(--radius-sm);
   background: var(--accent-dim);

@@ -142,8 +142,8 @@
    pointer-events: none ensures drops fall through to the parent container,
    which has its own onDrop handler reading dropInfoRef. */
 .bmPlaceholder {
-  height: 24px;
-  margin: 1px 4px;
+  height: 44px;
+  margin: 2px 4px;
   border-radius: var(--radius-sm);
   background: var(--accent-dim);
   border: 1.5px dashed var(--accent);
@@ -201,6 +201,27 @@
 }
 .deleteBtnConfirm:hover {
   background: #e05252 !important;
+}
+
+/* Full-width new folder button below search */
+.newFolderBtn {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  padding: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color var(--transition-fast), color var(--transition-fast),
+              background var(--transition-fast);
+}
+.newFolderBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* ── New folder inline + button (appears in row headers) ─────────────────── */

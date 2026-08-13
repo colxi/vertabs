@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import Fuse from "fuse.js";
 import styles from "./Tabs.module.css";
 import { faviconUrl } from "../utils/favicon";
 
@@ -50,14 +51,21 @@ export function Tabs({ tabs, groups, onFocus, onClose, onMove, collapsed, onColl
     groups.map((g) => [g.id, g])
   );
 
-  const visibleTabs = tabs.filter((t) => {
-    if (t.pinned) return false;
-    if (!q) return true;
-    return (
-      (t.title ?? "").toLowerCase().includes(q) ||
-      (t.url ?? "").toLowerCase().includes(q)
-    );
-  });
+  const unpinnedTabs = tabs.filter((t) => !t.pinned);
+
+  const visibleTabs = (() => {
+    if (!q) return unpinnedTabs;
+    const fuse = new Fuse(unpinnedTabs, {
+      keys: [
+        { name: "title", weight: 0.6 },
+        { name: "url",   weight: 0.4 },
+      ],
+      threshold: 0.4,
+      distance: 200,
+      includeScore: true,
+    });
+    return fuse.search(q).map((r) => r.item);
+  })();
 
   function handleDragStart(e: React.DragEvent, tab: chrome.tabs.Tab, i: number) {
     dragTabId.current = tab.id!;
@@ -67,7 +75,7 @@ export function Tabs({ tabs, groups, onFocus, onClose, onMove, collapsed, onColl
       title: tab.title ?? "",
       favIconUrl: tab.favIconUrl ?? "",
     }));
-    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.effectAllowed = "all";
   }
 
   function handleDragOver(e: React.DragEvent, i: number) {
