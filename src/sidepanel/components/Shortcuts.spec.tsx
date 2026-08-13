@@ -100,7 +100,7 @@ describe("Shortcuts", () => {
 
   it("navigates to the stored original URL on click, not the live tab URL", () => {
     // Storage has a different URL than shortcut.url (simulating a tab that navigated away)
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    (chrome.storage.sync.get as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: string, cb: (r: Record<string, unknown>) => void) => {
         cb({ "sidebar-shortcut-urls": { "1": "https://original.com" } });
       }
@@ -119,7 +119,7 @@ describe("Shortcuts", () => {
 
   it("backfills storage and navigates when no storage entry exists for a shortcut", () => {
     // Storage is empty — simulates a pre-existing pinned tab with no stored URL
-    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockImplementation(
+    (chrome.storage.sync.get as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: string, cb: (r: Record<string, unknown>) => void) => {
         cb({ "sidebar-shortcut-urls": {} });
       }
@@ -130,7 +130,7 @@ describe("Shortcuts", () => {
     fireEvent.click(item);
 
     // Should backfill storage with the current shortcut.url
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith({
       "sidebar-shortcut-urls": { "1": "https://a.com" },
     });
     // And navigate to it

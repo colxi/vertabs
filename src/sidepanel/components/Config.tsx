@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { SidebarConfig } from "../hooks/useConfig";
 import { Shortcut } from "../utils/shortcuts";
+import { THEMES, themeById } from "../utils/themes";
+import { storageGet, storageSet } from "../../storage";
 import styles from "./Config.module.css";
 
 interface Props {
@@ -24,6 +26,8 @@ export function Config({ config, onUpdate, onClose, shortcuts }: Props) {
         <ModeSection config={config} onUpdate={onUpdate} />
         <AppearanceSection config={config} onUpdate={onUpdate} />
         <ContentSection config={config} onUpdate={onUpdate} />
+        <CommandPaletteSection />
+        <KeyboardSection />
         <ExportImportSection shortcuts={shortcuts} />
       </div>
     </div>
@@ -69,16 +73,19 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Toggle({
   checked,
   onChange,
+  disabled,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
-      className={`${styles.toggle} ${checked ? styles.toggleOn : ""}`}
-      onClick={() => onChange(!checked)}
+      className={`${styles.toggle} ${checked ? styles.toggleOn : ""} ${disabled ? styles.toggleDisabled : ""}`}
+      onClick={() => !disabled && onChange(!checked)}
       role="switch"
       aria-checked={checked}
+      aria-disabled={disabled}
     >
       <span className={styles.toggleThumb} />
     </button>
@@ -192,6 +199,73 @@ function AppearanceSection({
 }) {
   return (
     <Section title="Appearance">
+      <Row label="Theme">
+        <select
+          className={styles.select}
+          value={config.theme}
+          onChange={(e) => {
+            const id = e.target.value;
+            const preset = themeById(id);
+            if (preset && id !== "custom") {
+              onUpdate({
+                theme: id,
+                accentColor: preset.accent,
+                bgColor: preset.bg,
+                surfaceColor: preset.surface,
+                textColor: preset.text,
+              });
+            } else {
+              onUpdate({ theme: id });
+            }
+          }}
+        >
+          {THEMES.map((t) => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </Row>
+
+      {config.theme === "custom" && (
+        <div className={styles.customTheme}>
+          <label className={styles.customThemeRow}>
+            <span>Accent</span>
+            <div className={styles.colorRow}>
+              <input type="color" className={styles.colorPicker}
+                value={config.accentColor}
+                onChange={(e) => onUpdate({ accentColor: e.target.value })} />
+              <span className={styles.colorHex}>{config.accentColor}</span>
+            </div>
+          </label>
+          <label className={styles.customThemeRow}>
+            <span>Background</span>
+            <div className={styles.colorRow}>
+              <input type="color" className={styles.colorPicker}
+                value={config.bgColor}
+                onChange={(e) => onUpdate({ bgColor: e.target.value })} />
+              <span className={styles.colorHex}>{config.bgColor}</span>
+            </div>
+          </label>
+          <label className={styles.customThemeRow}>
+            <span>Cards</span>
+            <div className={styles.colorRow}>
+              <input type="color" className={styles.colorPicker}
+                value={config.surfaceColor}
+                onChange={(e) => onUpdate({ surfaceColor: e.target.value })} />
+              <span className={styles.colorHex}>{config.surfaceColor}</span>
+            </div>
+          </label>
+          <label className={styles.customThemeRow}>
+            <span>Text</span>
+            <div className={styles.colorRow}>
+              <input type="color" className={styles.colorPicker}
+                value={config.textColor}
+                onChange={(e) => onUpdate({ textColor: e.target.value })} />
+              <span className={styles.colorHex}>{config.textColor}</span>
+            </div>
+          </label>
+        </div>
+      )}
+
       <Row label={`Font size — ${config.fontSize}px`}>
         <input
           type="range"
@@ -212,18 +286,6 @@ function AppearanceSection({
           onChange={(e) => onUpdate({ itemSpacing: Number(e.target.value) })}
           className={styles.slider}
         />
-      </Row>
-
-      <Row label="Accent color">
-        <div className={styles.colorRow}>
-          <input
-            type="color"
-            value={config.accentColor}
-            onChange={(e) => onUpdate({ accentColor: e.target.value })}
-            className={styles.colorPicker}
-          />
-          <span className={styles.colorHex}>{config.accentColor}</span>
-        </div>
       </Row>
 
       {config.mode === "floating" && (
@@ -377,7 +439,7 @@ function ExportImportSection({ shortcuts }: { shortcuts: Shortcut[] }) {
     if (inclShortcuts) {
       // Read original URLs from storage so exported URL is always the defined one
       const stored = await new Promise<Record<string, string>>((resolve) =>
-        chrome.storage.local.get("sidebar-shortcut-urls", (r) =>
+        storageGet("sidebar-shortcut-urls", (r) =>
           resolve((r["sidebar-shortcut-urls"] as Record<string, string>) ?? {})
         )
       );
@@ -519,6 +581,56 @@ function ExportImportSection({ shortcuts }: { shortcuts: Shortcut[] }) {
       />
 
       {status && <p className={styles.exportStatus}>{status}</p>}
+    </Section>
+  );
+}
+
+// ── Command Palette ───────────────────────────────────────────────────────────
+
+function CommandPaletteSection() {
+  return (
+    <Section title="Command Palette">
+      <Row label="Enable Command Palette">
+        <Toggle
+          checked={false}
+          onChange={() => {}}
+          disabled
+        />
+      </Row>
+      <p className={styles.comingSoon}>Soon!</p>
+    </Section>
+  );
+}
+
+// ── Keyboard Shortcuts ────────────────────────────────────────────────────────
+
+function KeyboardSection() {
+  const [shortcuts, setShortcuts] = React.useState<chrome.commands.Command[]>([]);
+
+  React.useEffect(() => {
+    chrome.commands.getAll((cmds) => setShortcuts(cmds));
+  }, []);
+
+  function shortcutLabel(name: string): string {
+    const cmd = shortcuts.find((c) => c.name === name);
+    return cmd?.shortcut || "Not set";
+  }
+
+  function openShortcutsPage() {
+    chrome.tabs.create({ url: "chrome://extensions/shortcuts", index: 0 });
+  }
+
+  return (
+    <Section title="Keyboard Shortcuts">
+      <Row label="Toggle sidebar">
+        <span className={styles.kbdShortcut}>{shortcutLabel("toggle-sidebar")}</span>
+      </Row>
+      <Row label="Command palette">
+        <span className={styles.kbdShortcut}>{shortcutLabel("toggle-command-palette")}</span>
+      </Row>
+      <button className={styles.importBtn} onClick={openShortcutsPage}>
+        Customise shortcuts ↗
+      </button>
     </Section>
   );
 }

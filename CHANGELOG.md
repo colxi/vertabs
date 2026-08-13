@@ -1,6 +1,37 @@
 # Changelog
 
-## [Unreleased]
+### Keyboard shortcuts
+
+- feat: sidebar toggle changed from `Cmd+E` → `Cmd+Shift+E` / `Ctrl+Shift+E`
+- feat: command palette toggle changed from `Cmd+K` → `Cmd+Shift+K` / `Ctrl+Shift+K`
+- feat: `toggle-command-palette` registered as a named `chrome.commands` entry in manifest so Chrome can route it natively
+- feat: background service worker forwards `toggle-command-palette` command to the active tab's content script
+- feat: Keyboard Shortcuts section added to Settings — shows current bindings (read live from `chrome.commands.getAll`) and a "Customise shortcuts ↗" button that opens `chrome://extensions/shortcuts`
+
+### Themes
+
+- feat: Theme selector added to Appearance section (replaces standalone Accent color picker)
+- feat: five built-in themes: **Dark** (default), **Midnight**, **Forest**, **Rose**, **Slate**
+- feat: **Custom** theme option exposes four color pickers: Accent, Background, Cards, Text
+- feat: theme colors are applied live via CSS variables — `--accent`, `--bg`, `--surface`, `--text`
+- feat: `src/sidepanel/utils/themes.ts` — central theme definitions, `themeById` helper
+- fix: Cards color picker now correctly targets `--surface` (used by all section cards) instead of `--bg-elevated`
+
+### Settings panel
+
+- refactor: Settings sections are now styled as **foldable cards** matching the main sidebar sections — each section is a floating card with border, shadow, and rounded corners
+- refactor: Settings body uses `gap: 8px` between cards and `padding: 12px` instead of flush borders
+- feat: Theme selector is the first item in the Appearance card
+- feat: Command Palette section added with an Enable toggle (disabled + "Soon!" label in accent color — feature under development)
+
+### Cross-device sync (`chrome.storage.sync`)
+
+- feat: `src/storage.ts` — central routing utility; keys in `SYNC_KEYS` go to `chrome.storage.sync`, everything else stays in `chrome.storage.local`
+- feat: the following data now syncs across devices: `sidebar-config`, `sidebar-shortcut-urls`, `sidebar-ui`, `sidebar-state`, `sidebar-pinned`
+- fix: `sidebar-bookmarks-open` (folder expand/collapse state) kept in `chrome.storage.local` — it is a local UI preference, not worth syncing
+- chore: `useConfig`, `useShortcuts`, `useUIState`, `useBookmarkFolders`, `Shortcuts.tsx`, `Config.tsx` all migrated to `storageGet`/`storageSet`
+- chore: `content/index.ts` and `background/index.ts` use `chrome.storage.sync` directly (avoids ES module import in content script context)
+- chore: test setup extended with `chrome.storage.sync` mock (shares backing store with `local` for test simplicity)
 
 ### Command Palette (`Cmd+K` / `Ctrl+K`)
 

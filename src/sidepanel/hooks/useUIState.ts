@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { storageGet, storageSet } from "../../storage";
 
 const STORAGE_KEY = "sidebar-ui";
 const SAVE_THROTTLE = 300;
@@ -30,7 +31,7 @@ export function useUIState() {
 
   // Load from storage on mount.
   useEffect(() => {
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
+    storageGet(STORAGE_KEY, (result) => {
       const saved = result[STORAGE_KEY] as Partial<SidebarUIState> | undefined;
       if (saved) {
         const merged = { ...DEFAULT_UI_STATE, ...saved };
@@ -43,7 +44,7 @@ export function useUIState() {
   // Immediately flush to storage (used on visibilitychange hidden).
   const flushSave = useCallback(() => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
-    chrome.storage.local.set({ [STORAGE_KEY]: latestUI.current });
+    storageSet({ [STORAGE_KEY]: latestUI.current });
   }, []);
 
   // Save scroll immediately on tab hide.
@@ -62,7 +63,7 @@ export function useUIState() {
       latestUI.current = next;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        chrome.storage.local.set({ [STORAGE_KEY]: latestUI.current });
+        storageSet({ [STORAGE_KEY]: latestUI.current });
         saveTimer.current = null;
       }, SAVE_THROTTLE);
       return next;

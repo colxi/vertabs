@@ -1,6 +1,6 @@
 # Vertabs
 
-A Chrome MV3 extension that adds a persistent sidebar to every page. The sidebar shows pinned-tab shortcuts, bookmarks, and open tabs. It supports two display modes (floating iframe overlay and Chrome native Side Panel) and is fully configurable via an in-sidebar settings overlay.
+A Chrome MV3 extension that adds a persistent sidebar to every page. The sidebar shows pinned-tab shortcuts, bookmarks, and open tabs. It supports two display modes (floating iframe overlay and Chrome native Side Panel) and is fully configurable via an in-sidebar settings overlay. A full-viewport Command Palette (`Cmd+K`) provides quick search and actions across tabs, bookmarks, shortcuts, and built-in browser commands.
 
 # Coding instructions
 
@@ -12,12 +12,12 @@ A Chrome MV3 extension that adds a persistent sidebar to every page. The sidebar
 
 ## Tech stack
 
-| Concern        | Choice                                            |
-| -------------- | ------------------------------------------------- |
-| Build          | Vite 5, `pnpm`                                    |
-| UI             | React 18, TypeScript, CSS Modules                 |
-| Extension APIs | MV3 — `tabs`, `bookmarks`, `storage`, `sidePanel` |
-| Design         | Dark theme, accent `#7c3aed` (purple)             |
+| Concern        | Choice                                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| Build          | Vite 5, `pnpm`                                                             |
+| UI             | React 18, TypeScript, CSS Modules                                          |
+| Extension APIs | MV3 — `tabs`, `bookmarks`, `storage`, `sidePanel`, `tabGroups`, `sessions` |
+| Design         | Dark theme, accent `#7c3aed` (purple)                                      |
 
 Build command: `pnpm build` → runs `vite build && cp -r public/. dist/`
 Dev (watch): `pnpm dev`
@@ -27,26 +27,39 @@ Load unpacked from `dist/` in `chrome://extensions`.
 
 ## Architecture
 
-Three compiled entry points, all output to `dist/`:
+Four compiled entry points, all output to `dist/`:
 
 ```
 src/
-  background/index.ts   → dist/background.js     (service worker)
-  content/index.ts      → dist/content.js        (injected into every page)
-  sidepanel/            → dist/sidepanel.js/.css (React app)
+  background/index.ts      → dist/background.js         (service worker)
+  content/index.ts         → dist/content.js            (injected into every page)
+  sidepanel/               → dist/sidepanel.js/.css     (React app — sidebar)
+  commandPalette/          → dist/commandPalette.js/.css (React app — command palette)
 public/
   manifest.json
   icons/
 ```
 
+### Why two React apps?
+
+The extension has two display modes for the sidebar: **floating** (an iframe injected by the content script) and **panel** (Chrome's native Side Panel API). In both modes, the sidebar React app runs inside an iframe that is constrained to the sidebar's width and positioned at the screen edge.
+
+The Command Palette needs to render as a **full-viewport overlay** centered on the page — not inside the narrow sidebar iframe. There are two options:
+
+1. **Resize the sidebar iframe** to fill the viewport when the palette opens — rejected because it causes visual glitching, breaks the panel mode entirely (Chrome controls the panel iframe, not us), and requires complex CSS hacks.
+2. **Inject a second independent iframe** that covers the full viewport — this is what we do. The content script injects a `position:fixed; inset:0; width:100vw; height:100vh` iframe pointing to a separate React app (`commandPalette/index.html`) when `Cmd+K` is pressed, and removes it on close.
+
+The command palette iframe is an extension page so it has full access to all Chrome APIs (`chrome.runtime.sendMessage`, `chrome.tabs`, etc.) just like the sidebar. It communicates with the content script via `window.parent.postMessage` only for close/settings signals.
+
 ### background.js
 
-Service worker. Reads `sidebar-config` from `chrome.storage.local` on every toolbar click and routes it:
+Service worker. Handles toolbar clicks, keyboard shortcuts, and messages from content scripts:
 
-- **floating mode** → sends `{ type: "toggle-sidebar" }` to the active tab's content script
-- **panel mode** → calls `chrome.sidePanel.open({ tabId })`
+- **toolbar click / `Cmd+E`** → sends `{ type: "toggle-sidebar" }` to the active tab's content script (floating mode) or calls `chrome.sidePanel.open` (panel mode)
+- **`commandPalette-data`** message → fetches tabs, bookmarks, shortcuts, current tab and returns them to the palette
+- **`commandPalette-activate`** message → executes actions (focus tab, open URL, zoom, mute, duplicate, etc.) that require elevated Chrome API access
 
-Also listens to `chrome.windows.onCreated` and, in floating mode, sends `{ type: "show-sidebar" }` to the first tab after a 500 ms delay (so new windows auto-show the sidebar).
+Also listens to `chrome.windows.onCreated` and, in floating mode, sends `{ type: "show-sidebar" }` to the first tab after a 500 ms delay.
 
 `openPanelOnActionClick` is always `false`; the service worker handles opening manually.
 
@@ -60,6 +73,7 @@ Injected into every page (`run_at: document_end`). In **panel mode** it does not
 4. Handles `postMessage` events from the React iframe (`sidebar-state`, `sidebar-pin`, `sidebar-mouseenter`, `sidebar-mouseleave`, `config-update`).
 5. Handles `chrome.runtime.onMessage` for `toggle-sidebar` / `show-sidebar` from the service worker.
 6. Listens to `document.visibilitychange` — when the tab becomes visible (user switches back to it), reads state/pinned/scroll from storage and sends `sidebar-sync` to the iframe.
+7. Injects/removes the Command Palette iframe (`src/content/commandPaletteIframe.ts`) on `Cmd+K`.
 
 **Grace period:** after a `reveal()` call, `inGrace = true` for 800 ms. During this window, `applyPin(false)` will not call `scheduleHide()`. This prevents a feedback loop where tab-switching triggers `visibilitychange → reveal → sidebar-sync → React sets pinned=false → scheduleHide()` which would immediately re-hide the sidebar on tab focus.
 
@@ -94,6 +108,16 @@ Runs inside the `<iframe>` (floating mode) or the Chrome native side panel (pane
 | `{ type: "sidebar-sync", state, pinned, scroll }` | Tab becomes visible                      |
 | `{ type: "sidebar-reveal" }`                      | Edge hover triggers reveal               |
 | `{ type: "mode-changed", mode }`                  | Mode changed in config (requires reload) |
+| `{ type: "open-settings" }`                       | Command Palette "Open Settings" command  |
+
+### commandPalette (React app)
+
+Runs inside a **full-viewport iframe** injected by `content/commandPaletteIframe.ts` when `Cmd+K` is pressed. Removed from the DOM on close.
+
+- Calls `chrome.runtime.sendMessage({ type: "commandPalette-data" })` on mount to fetch tabs, bookmarks, shortcuts, and current tab info from the background
+- Calls `chrome.runtime.sendMessage({ type: "commandPalette-activate", action, ... })` to execute actions
+- Sends `{ type: "commandPalette-close" }` to `window.parent` to remove itself
+- Sends `{ type: "open-settings" }` to `window.parent` which the content script forwards to the sidebar iframe
 
 ---
 
@@ -236,6 +260,7 @@ src/
     index.ts                    Service worker: toolbar click routing, new window handling
   content/
     index.ts                    Floating sidebar injection, show/hide, postMessage bridge
+    commandPaletteIframe.ts     Injects/removes the Command Palette full-viewport iframe
   sidepanel/
     main.tsx                    React entry point
     App.tsx                     Root component: state, scroll, postMessage wiring
@@ -250,12 +275,7 @@ src/
       BookmarksManager.tsx      Full CRUD bookmark editor (used in Config)
       Tabs.tsx                  Open-tabs list grouped by window
       Config.tsx                Settings overlay with all sections
-      Shortcuts.module.css
-      Bookmarks.module.css
-      BookmarksManager.module.css
-      Tabs.module.css
-      Config.module.css
-      CompactShortcuts.module.css
+      Spotlight.tsx             (removed — replaced by commandPalette React app)
     hooks/
       useShortcuts.ts           Pinned tabs → Shortcut[], CRUD via chrome.tabs
       useBookmarks.ts           chrome.bookmarks tree
@@ -265,6 +285,11 @@ src/
     utils/
       shortcuts.ts              Shortcut type definition
       favicon.ts                faviconUrl() helper
+  commandPalette/
+    main.tsx                    React entry point
+    App.tsx                     Root component: search, results, keyboard nav, commands
+    App.module.css              Full-viewport overlay styles
+    index.html                  Command Palette HTML shell
 public/
   manifest.json
   icons/

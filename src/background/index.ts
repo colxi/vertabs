@@ -5,7 +5,7 @@ chrome.sidePanel
 
 // Shared toggle logic used by both toolbar click and keyboard shortcut.
 function toggleSidebar(tab: chrome.tabs.Tab) {
-  chrome.storage.local.get("sidebar-config", (result) => {
+  chrome.storage.sync.get("sidebar-config", (result) => {
     const config = (result["sidebar-config"] as Record<string, unknown>) ?? {};
     const mode = (config.mode as string) ?? "floating";
     if (mode === "panel") {
@@ -19,11 +19,19 @@ function toggleSidebar(tab: chrome.tabs.Tab) {
 // Toggle sidebar on toolbar click.
 chrome.action.onClicked.addListener(toggleSidebar);
 
-// Toggle sidebar on Cmd+Shift+S / Ctrl+Shift+S keyboard shortcut.
+// Toggle sidebar on Cmd+Shift+E / Ctrl+Shift+E keyboard shortcut.
 chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-sidebar") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) toggleSidebar(tabs[0]);
+    });
+  }
+  if (command === "toggle-command-palette") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id;
+      if (tabId != null) {
+        chrome.tabs.sendMessage(tabId, { type: "toggle-command-palette" }).catch(() => {});
+      }
     });
   }
 });
@@ -31,7 +39,7 @@ chrome.commands.onCommand.addListener((command) => {
 // Show floating sidebar in every new window automatically (floating mode only).
 chrome.windows.onCreated.addListener((win) => {
   if (win.id == null) return;
-  chrome.storage.local.get("sidebar-config", (result) => {
+  chrome.storage.sync.get("sidebar-config", (result) => {
     const config = (result["sidebar-config"] as Record<string, unknown>) ?? {};
     const mode = (config.mode as string) ?? "floating";
     if (mode !== "floating") return;
@@ -72,7 +80,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       chrome.tabs.query({ pinned: true, currentWindow: true, windowId }),
       chrome.bookmarks.getTree(),
       new Promise<Record<string, string>>((resolve) =>
-        chrome.storage.local.get("sidebar-shortcut-urls", (r) =>
+        chrome.storage.sync.get("sidebar-shortcut-urls", (r) =>
           resolve((r["sidebar-shortcut-urls"] as Record<string, string>) ?? {})
         )
       ),
@@ -87,6 +95,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       });
     });
     return true;
+  }
+
+  if (msg.type === "commandPalette-resize" && typeof msg.height === "number") {
+    if (sender.tab?.id != null) {
+      chrome.tabs.sendMessage(sender.tab.id, {
+        type: "commandPalette-resize",
+        height: msg.height,
+      }).catch(() => {});
+    }
+    return false;
   }
 
   if (msg.type === "commandPalette-activate") {
@@ -154,7 +172,7 @@ chrome.tabs.onCreated.addListener((tab) => {
 
   if (!isNewTab) return;
 
-  chrome.storage.local.get("sidebar-config", (result) => {
+  chrome.storage.sync.get("sidebar-config", (result) => {
     const config = (result["sidebar-config"] as Record<string, unknown>) ?? {};
     const newTabUrl = (config.newTabUrl as string) ?? "https://www.google.com";
     chrome.tabs.update(tab.id!, { url: newTabUrl });

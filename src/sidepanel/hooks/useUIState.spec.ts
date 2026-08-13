@@ -19,7 +19,7 @@ describe("useUIState", () => {
   });
 
   it("merges persisted state from storage on mount", async () => {
-    chrome.storage.local.get = vi.fn((_keys, cb) =>
+    chrome.storage.sync.get = vi.fn((_keys, cb) =>
       cb({ "sidebar-ui": { scroll: 200, bookmarksCollapsed: true } })
     );
 
@@ -46,7 +46,7 @@ describe("useUIState", () => {
 
   it("update() schedules a storage write", async () => {
     vi.useFakeTimers();
-    const setSpy = vi.spyOn(chrome.storage.local, "set");
+    const setSpy = vi.spyOn(chrome.storage.sync, "set");
     const { result } = renderHook(() => useUIState());
 
     act(() => {
@@ -69,7 +69,7 @@ describe("useUIState", () => {
 
   it("flushSave() writes to storage immediately without waiting for throttle", async () => {
     vi.useFakeTimers();
-    const setSpy = vi.spyOn(chrome.storage.local, "set");
+    const setSpy = vi.spyOn(chrome.storage.sync, "set");
     const { result } = renderHook(() => useUIState());
 
     act(() => {
@@ -88,7 +88,7 @@ describe("useUIState", () => {
   });
 
   it("restore() replaces state with a snapshot without persisting", () => {
-    const setSpy = vi.spyOn(chrome.storage.local, "set");
+    const setSpy = vi.spyOn(chrome.storage.sync, "set");
     const { result } = renderHook(() => useUIState());
 
     act(() => {
@@ -102,7 +102,7 @@ describe("useUIState", () => {
   });
 
   it("flushSave() is called on visibilitychange to hidden", () => {
-    const setSpy = vi.spyOn(chrome.storage.local, "set");
+    const setSpy = vi.spyOn(chrome.storage.sync, "set");
     const { result } = renderHook(() => useUIState());
 
     act(() => {

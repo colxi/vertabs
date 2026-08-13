@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
+import { storageGet, storageSet } from "../../storage";
 
 export interface SidebarConfig {
   fontSize: number;
   accentColor: string;
+  bgColor: string;
+  surfaceColor: string;
+  textColor: string;
+  theme: string; // preset name or "custom"
   sidebarWidth: number;
   autoHideDelay: number;
   mode: "floating" | "panel";
@@ -15,12 +20,17 @@ export interface SidebarConfig {
   showTabs: boolean;
   openLinksInNewTab: boolean;
   newTabUrl: string;
-  itemSpacing: number; // vertical padding (px) for list rows — 2..10
+  itemSpacing: number;
+  enableCommandPalette: boolean;
 }
 
 export const DEFAULT_CONFIG: SidebarConfig = {
   fontSize: 13,
   accentColor: "#7c3aed",
+  bgColor: "#16171a",
+  surfaceColor: "#22232a",
+  textColor: "#eaebed",
+  theme: "dark",
   sidebarWidth: 340,
   autoHideDelay: 400,
   mode: "floating",
@@ -34,6 +44,7 @@ export const DEFAULT_CONFIG: SidebarConfig = {
   openLinksInNewTab: true,
   newTabUrl: "https://www.google.com",
   itemSpacing: 4,
+  enableCommandPalette: true,
 };
 
 const STORAGE_KEY = "sidebar-config";
@@ -43,7 +54,7 @@ export function useConfig() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
+    storageGet(STORAGE_KEY, (result) => {
       if (result[STORAGE_KEY]) {
         setConfigState({
           ...DEFAULT_CONFIG,
@@ -57,7 +68,7 @@ export function useConfig() {
   const update = useCallback((updates: Partial<SidebarConfig>) => {
     setConfigState((prev) => {
       const next = { ...prev, ...updates };
-      chrome.storage.local.set({ [STORAGE_KEY]: next });
+      storageSet({ [STORAGE_KEY]: next });
       // Notify content script so it can apply live changes (position, width, delay).
       window.parent.postMessage({ type: "config-update", config: next }, "*");
       return next;
