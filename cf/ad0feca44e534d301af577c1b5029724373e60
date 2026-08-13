@@ -1,0 +1,70 @@
+src/e2e/screenshots.spec.ts
+  s_ed21a9f9ee915e::t_36953438f804c2 145-146,170,174-175,182,184,188
+  s_ed21a9f9ee915e::t_dba719b4cdfdfb 206-217,219-229,231-232,234,245
+  s_ed21a9f9ee915e::t_4b9e1554cecda7 114-116
+  s_ed21a9f9ee915e::t_0fcf9d29a1eac8 186-187
+  s_ed21a9f9ee915e::t_9e30561a998170 76,86-87,89,94
+  s_ed21a9f9ee915e::t_73d240cde94549 344-345,351,353-354,358,367,369-374,383,387-391,396-397
+  s_ed21a9f9ee915e::t_8a5d17b18a5da4 149,156,167-169,172
+  s_ed21a9f9ee915e::t_ae697fd72057db 90-93
+  s_ed21a9f9ee915e::t_28f70beff9ffe4 244,249
+  s_ed21a9f9ee915e::t_46650cf7255f54 120-121,123-124
+  s_ed21a9f9ee915e::t_a110ae60b35d33 71-75
+  s_ed21a9f9ee915e::t_c1dd1eac9972ee 88,108-110
+  s_ed21a9f9ee915e::t_f4b42baee492c8 30,33
+  s_ed21a9f9ee915e::t_82bba0c40a6d0e 218
+  s_ed21a9f9ee915e::t_9fe993235747e3 165
+  s_ed21a9f9ee915e::t_28c68faf43389b 49-52,54-60
+  s_ed21a9f9ee915e::t_67ec39e5e2017a 97
+  s_ed21a9f9ee915e::t_7f5f95531bfb0b 233
+  s_ed21a9f9ee915e::t_77e218979b19e8 96,98-107
+  s_ed21a9f9ee915e::t_06208e6336c40e 142-144,150-155,157,159-164,166,173,183,185
+  s_ed21a9f9ee915e::t_67eca7c37113e9 251
+  s_ed21a9f9ee915e::t_6b727d5b976f82 269
+  s_ed21a9f9ee915e::t_04d10c75d3edd5 230,236
+  s_ed21a9f9ee915e::t_2c1737a46f130c 147,158
+  s_ed21a9f9ee915e::t_fb16f5724916d9 148
+  s_ed21a9f9ee915e::t_2420db946f7713 5,21,25-29,31-32,34-48,53,61,65,67,122,126-141,190-205,235,237,240-243,250,252-253,270-343,346-350,352,355-356,359-366,368,398-400
+  s_ed21a9f9ee915e::t_231ba184d8dbe6 254-263
+  s_ed21a9f9ee915e::t_f7c4c67ee08e58 111,118
+  s_ed21a9f9ee915e::t_a887b89c0727cc 381-382,384-386,392-395
+  s_ed21a9f9ee915e::t_550e87c0c88b63 171,176-181
+  s_ed21a9f9ee915e::t_6c8eb121e96a4d 238-239,246
+  s_ed21a9f9ee915e::t_47c0897dff4a64 375-380
+  s_ed21a9f9ee915e::t_229737a83053fb 248
+  s_ed21a9f9ee915e::t_dbe670fe89c7a2 13
+  s_ed21a9f9ee915e::t_a06aa22e3949cd 95,112-113,117,119
+  s_ed21a9f9ee915e::t_61991f0c8da774 264-268
+  s_ed21a9f9ee915e::t_2552e90a5e05e7 62-64,66,68-70,77-85
+  s_ed21a9f9ee915e::t_9dc84e917b7e94 22-24
+  s_ed21a9f9ee915e::t_5d85254281565e 2-4
+  s_ed21a9f9ee915e::t_76aa1367730d26 6-8,10-12
+  s_ed21a9f9ee915e::t_0840069eda2dc5 14-16,18-20
+  s_ed21a9f9ee915e::t_1e32261b2df93d 125
+  s_ed21a9f9ee915e::t_70f54b178b6c13 189
+  s_ed21a9f9ee915e::t_4fdfd51afbeae3 247
+  s_ed21a9f9ee915e::t_65a40a5f540c33 357
+  s_ed21a9f9ee915e::t_bad770e18fecb9 401
+docs/index.html
+  s_ed21a9f9ee915e::t_0b4a482d359e43 407
+  s_ed21a9f9ee915e::t_251104f4e9f633 301-302
+  s_ed21a9f9ee915e::t_d0657875f980f0 7-11
+  s_ed21a9f9ee915e::t_c589380f1614dc 1-6,12-300,303-406,408-409,411-424,426-427,429-555,557-563,565,567-571
+  s_ed21a9f9ee915e::t_e6b88962dae3ea 410,425,428,556,564,566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cfad0feca44e534d301af577c1b5029724373e60",
+  "prompts": {},
+  "sessions": {
+    "s_ed21a9f9ee915e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05b4f4450fferAPJha2HZBJTR5",
+        "model": "claude-sonnet-4.6"
+      },
+      "human_author": "Sergi Guzman <sergi.guzman@glovoapp.com>"
+    }
+  }
+}
